@@ -1,3 +1,3 @@
-# Distributed-Chat-System
+# Distributed Chat System
 
 This project contains a distributed chat server-client system

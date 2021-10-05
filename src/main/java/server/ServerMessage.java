@@ -11,4 +11,14 @@ public class ServerMessage {
         join.put("approved", approve);
         return join;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getRoomChange(String id, String MainHall) {
+        JSONObject join = new JSONObject();
+        join.put("type", "roomchange");
+        join.put("identity", id);
+        join.put("former","");
+        join.put("roomid",MainHall);
+        return join;
+    }
 }

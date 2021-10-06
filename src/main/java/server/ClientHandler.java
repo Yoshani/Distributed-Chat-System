@@ -26,12 +26,10 @@ public class ClientHandler extends Thread {
 
     private static HashMap<String, clientState> clientObjectList = new HashMap<String, clientState>();  //maintain room object list  clientID:clientObject
     private static HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
-    private Room mainhall;
 
     public ClientHandler(Socket clientSocket) {
         this.serverID = ServerState.getInstance().getServerID();
-        mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
-        roomObjectList.put("MainHall-" + serverID, mainhall);
+        roomObjectList.put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
         globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
         this.clientSocket = clientSocket;
     }
@@ -87,8 +85,8 @@ public class ClientHandler extends Thread {
         if (checkID(id) && !clientObjectList.containsKey(id)) {
             System.out.println("Recieved correct ID ::" + fromClient);
 
-            clientState client = new clientState(id, mainhall.getRoomId(), connected.getPort());
-            mainhall.addParticipants(client);
+            clientState client = new clientState(id, ServerState.getInstance().getMainHall().getRoomId(), connected.getPort());
+            ServerState.getInstance().getMainHall().addParticipants(client);
             clientObjectList.put(id, client);
 
             clientList.put(id, connected.getPort());

@@ -130,8 +130,8 @@ public class ClientHandlerThread extends Thread {
         List<String> participants = new ArrayList<String>();
         System.out.println("room contains :");
         for (int i = 0; i < clients.size(); i++) {
-            participants.add(clients.get(i).getId());
-            System.out.println(clients.get(i).getId());
+            participants.add(clients.get(i).getClientID());
+            System.out.println(clients.get(i).getClientID());
         }
         String owner = room.getOwnerIdentity();
         messageSend(connected, "roomcontents " + roomID + " " + owner, participants);

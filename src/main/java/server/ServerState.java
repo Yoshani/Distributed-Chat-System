@@ -13,7 +13,6 @@ public class ServerState {
 
     private final HashMap<String, Integer> clientPortMap = new HashMap<>(); //client list <clientID,port>
     private final HashMap<Integer, String> portClientMap = new HashMap<>(); //client list  <port,clientID>
-//    private final HashMap<String, String> ownerRoomServerLocalMap = new HashMap<>(); //global rooms with their owners <roomID,ownerID>
 
     private final HashMap<String, ClientState> clientStateMap = new HashMap<>();  //maintain room object list  <clientID,clientState>
     private final HashMap<String, Room> roomMap = new HashMap<>();  //maintain room object list <roomID,roomObject>

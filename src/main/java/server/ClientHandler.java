@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ClientHanlder extends Thread {
+public class ClientHandler extends Thread {
 
     private String serverID;   //server id which is given when starting the server
-    private ArrayList<ClientHanlder> threadList;
+    private ArrayList<ClientHandler> threadList;
     private Socket clientSocket;
 
     private PrintWriter printWriter;
@@ -29,12 +29,12 @@ public class ClientHanlder extends Thread {
     private static HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
     private Room mainhall;
 
-    public ClientHanlder(String id, Socket socket, ArrayList<ClientHanlder> threads) {
+    public ClientHandler(String id, Socket clientSocket, ArrayList<ClientHandler> threads) {
         this.serverID = id;
         mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
         roomObjectList.put("MainHall-" + serverID, mainhall);
         globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
-        this.clientSocket = socket;
+        this.clientSocket = clientSocket;
         this.threadList = threads;
     }
 
@@ -222,7 +222,7 @@ public class ClientHanlder extends Thread {
     }
 
     private void printToAllClients(String fromClient){
-        for(ClientHanlder thread:threadList){
+        for(ClientHandler thread:threadList){
             thread.printWriter.println(fromClient);
         }
     }

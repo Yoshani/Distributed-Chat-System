@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ClientHandlerThread extends Thread {
@@ -73,12 +74,11 @@ public class ClientHandlerThread extends Thread {
 
     //new identity
     private void newID(String clientID, Socket connected, String jsonStringFromClient) throws IOException {
-        if (checkID(clientID) && !ServerState.getInstance().getClientStateMap().containsKey(clientID)) {
-            System.out.println("INFO : Recieved correct ID ::" + jsonStringFromClient);
+        if (checkID(clientID) && !ServerState.getInstance().isClientIDAlreadyTaken(clientID)) {
+            System.out.println("INFO : Received correct ID ::" + jsonStringFromClient);
 
             this.clientState = new ClientState(clientID, ServerState.getInstance().getMainHall().getRoomID(), connected.getPort());
             ServerState.getInstance().getMainHall().addParticipants(clientState);
-            ServerState.getInstance().getClientStateMap().put(clientID, clientState);
 
             synchronized (connected) {
                 messageSend(connected, "newid true", null);
@@ -118,15 +118,12 @@ public class ClientHandlerThread extends Thread {
     private void who(Socket connected, String jsonStringFromClient) throws IOException {
         String roomID = clientState.getRoomID();
         Room room = ServerState.getInstance().getRoomMap().get(roomID);
-        List<ClientState> clients = room.getParticipants();
+        HashMap<String, ClientState> clientStateMap = room.getClientStateMap();
 
-        List<String> participants = new ArrayList<String>();
-        System.out.println("room contains :");
-        for (int i = 0; i < clients.size(); i++) {
-            participants.add(clients.get(i).getClientID());
-            System.out.println(clients.get(i).getClientID());
-        }
+        List<String> participants = new ArrayList<>(clientStateMap.keySet());
+
         String owner = room.getOwnerIdentity();
+        System.out.println("LOG  : participants in room [" + roomID + "] : " + participants);
         messageSend(connected, "roomcontents " + roomID + " " + owner, participants);
     }
 

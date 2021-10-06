@@ -1,13 +1,16 @@
 package server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class Room {
-    private String ownerID;
-    private String roomID;
-    private List<ClientState> participants = new ArrayList<ClientState>();
+    private final String ownerID;
+    private final String roomID;
 
+    private final HashMap<String, ClientState> clientStateMap = new HashMap<>();  //<clientID,clientState>
+
+    //TODO : check sync keyword
     public Room(String identity, String roomID) {
         this.ownerID = identity;
         this.roomID = roomID;
@@ -17,20 +20,16 @@ public class Room {
         return roomID;
     }
 
-    public synchronized void setRoomID(String roomID) {
-        this.roomID = roomID;
+    public synchronized HashMap<String, ClientState> getClientStateMap() {
+        return clientStateMap;
     }
 
-    public synchronized List<ClientState> getParticipants() {
-        return this.participants;
+    public synchronized void addParticipants(ClientState clientState) {
+        this.clientStateMap.put(clientState.getClientID(), clientState);
     }
 
-    public synchronized void addParticipants(ClientState participantID) {
-        this.participants.add(participantID);
-    }
-
-    public synchronized void removeParticipants(ClientState participantID) {
-        this.participants.remove(participantID);
+    public synchronized void removeParticipants(ClientState clientState) {
+        this.clientStateMap.remove(clientState.getClientID());
     }
 
     public String getOwnerIdentity() {

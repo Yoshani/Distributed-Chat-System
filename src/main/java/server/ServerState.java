@@ -1,7 +1,6 @@
 package server;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 public class ServerState {
 
@@ -11,7 +10,6 @@ public class ServerState {
     private Room mainHall;
     private final ArrayList<ClientHandlerThread> clientHandlerThreadList = new ArrayList<>();
 
-    private final HashMap<String, ClientState> clientStateMap = new HashMap<>();  //maintain room object list  <clientID,clientState>
     private final HashMap<String, Room> roomMap = new HashMap<>();  //maintain room object list <roomID,roomObject>
 
     //singleton
@@ -43,6 +41,14 @@ public class ServerState {
         clientHandlerThreadList.add(clientHandlerThread);
     }
 
+    public boolean isClientIDAlreadyTaken(String clientID){
+        for (Map.Entry<String, Room> entry : this.getRoomMap().entrySet()) {
+            Room room = entry.getValue();
+            if (room.getClientStateMap().containsKey(clientID)) return true;
+        }
+        return false;
+    }
+
     public String getServerID() {
         return serverID;
     }
@@ -53,10 +59,6 @@ public class ServerState {
 
     public Room getMainHall() {
         return mainHall;
-    }
-
-    public HashMap<String, ClientState> getClientStateMap() {
-        return clientStateMap;
     }
 
     public HashMap<String, Room> getRoomMap() {

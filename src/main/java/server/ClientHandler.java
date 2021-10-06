@@ -12,15 +12,14 @@ import java.util.List;
 
 public class ClientHandler extends Thread {
 
-    private String serverID;   //server id which is given when starting the server
-    private Socket clientSocket;
+    private final Socket clientSocket;
     //TODO : have client state in thread
 
     //TODO : check input stream local var
     private DataOutputStream dataOutputStream;
 
     public ClientHandler(Socket clientSocket) {
-        this.serverID = ServerState.getInstance().getServerID();
+        String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
         ServerState.getInstance().getOwnerRoomServerLocalMap().put("MainHall-" + serverID, "default-" + serverID);
         this.clientSocket = clientSocket;
@@ -86,7 +85,7 @@ public class ClientHandler extends Thread {
 
             synchronized (connected) {
                 messageSend(connected, "newid true", null);
-                messageSend(connected, "roomchange " + id + " MainHall-" + serverID, null);
+                messageSend(connected, "roomchange " + id + " MainHall-" + ServerState.getInstance().getServerID(), null);
             }
         } else {
             System.out.println("Recieved wrong ID type or ID already in use");

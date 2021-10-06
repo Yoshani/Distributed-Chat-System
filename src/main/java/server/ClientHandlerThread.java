@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientHandler extends Thread {
+public class ClientHandlerThread extends Thread {
 
     private final Socket clientSocket;
     //TODO : have client state in thread
@@ -18,7 +18,7 @@ public class ClientHandler extends Thread {
     //TODO : check input stream local var
     private DataOutputStream dataOutputStream;
 
-    public ClientHandler(Socket clientSocket) {
+    public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
         ServerState.getInstance().getOwnerRoomServerLocalMap().put("MainHall-" + serverID, "default-" + serverID);

@@ -2,7 +2,6 @@ package server;
 
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -25,10 +24,10 @@ public class Main {
             System.out.println("LOG  : TCP Server Waiting for clients on port 5000"); //client should use 5000 as port
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket);
+                ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
                 //starting the tread
-                ServerState.getInstance().getClientHandlerList().add(clientHandler);
-                clientHandler.start();
+                ServerState.getInstance().getClientHandlerThreadList().add(clientHandlerThread);
+                clientHandlerThread.start();
             }
 
         } catch (Exception e) {

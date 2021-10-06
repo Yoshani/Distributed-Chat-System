@@ -9,7 +9,7 @@ public class ServerState {
     private int serverPort;
 
     private Room mainHall;
-    private final ArrayList<ClientHandler> clientHandlerList = new ArrayList<>();
+    private final ArrayList<ClientHandlerThread> clientHandlerThreadList = new ArrayList<>();
 
     private final HashMap<String, Integer> clientPortMap = new HashMap<>(); //client list <clientID,port>
     private final HashMap<Integer, String> portClientMap = new HashMap<>(); //client list  <port,clientID>
@@ -56,8 +56,8 @@ public class ServerState {
         return mainHall;
     }
 
-    public ArrayList<ClientHandler> getClientHandlerList() {
-        return clientHandlerList;
+    public ArrayList<ClientHandlerThread> getClientHandlerThreadList() {
+        return clientHandlerThreadList;
     }
 
     public HashMap<String, Integer> getClientPortMap() {

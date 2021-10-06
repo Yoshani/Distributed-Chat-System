@@ -10,58 +10,111 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
-
-public class Server implements Runnable{
+public class Server implements Runnable {
 
     private DataOutputStream out;
     private ServerSocket Server;
-    private static List<String> clientList = new ArrayList<String>();
-    private String serverID;
+    private HashMap<String, Integer> clientList = new HashMap<String, Integer>(); //client list
+    private HashMap<Integer, String> reverseClientList = new HashMap<Integer, String>(); //client list
+    private HashMap<String, String> globalRoomList = new HashMap<String, String>(); //global rooms with their owners
+    private String serverID;   //server id which is given when starting the server
 
-    public Server(String id){
+    private HashMap<String, clientState> clientObjectList = new HashMap<String, clientState>();  //maintain room object list  clientID:clientObject
+    private HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
+    private Room mainhall;
+
+    public Server(String id) {
         this.serverID = id;
+        mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
+        roomObjectList.put("MainHall-" + serverID, mainhall);
+        globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
     }
 
+    //check the existence of a key in json object
     private boolean hasKey(JSONObject jsonObject, String key) {
         return (jsonObject != null && jsonObject.get(key) != null);
     }
 
+    //check validity of the ID
     private boolean checkID(String id) {
         return (Character.toString(id.charAt(0)).matches("[a-zA-Z]+") && id.matches("[a-zA-Z0-9]+") && id.length() >= 3 && id.length() <= 16);
     }
 
+    //send message to client
     private void send(JSONObject obj) throws IOException {
         out.write((obj.toJSONString() + "\n").getBytes("UTF-8"));
         out.flush();
     }
 
+    //format message before sending it to client
     private void messageSend(Socket socket, String msg) throws IOException {
         JSONObject sendToClient = new JSONObject();
         String[] array = msg.split(" ");
-        if (array[0].equals("newid")){
+        if (array[0].equals("newid")) {
             sendToClient = ServerMessage.getApprovalNewID(array[1]);
             send(sendToClient);
-        } if (array[0].equals("roomchange")){
-            sendToClient = ServerMessage.getRoomChange(array[1],array[2]);
+        }
+        if (array[0].equals("roomchange")) {
+            sendToClient = ServerMessage.getRoomChange(array[1], array[2]);
+            send(sendToClient);
+        }
+        if (array[0].equals("createroom")) {
+            sendToClient = ServerMessage.getCreateRoom(array[1], array[2]);
+            send(sendToClient);
+        }
+        if (array[0].equals("createroomchange")) {
+            sendToClient = ServerMessage.getCreateRoomChange(array[1], array[2], array[3]);
             send(sendToClient);
         }
     }
 
-    private void newID(String id, Socket connected, String fromclient) throws IOException{
-        if (checkID(id) && !clientList.contains(id)) {
-            System.out.println("Recieved correct ID type::" + fromclient);
-            clientList.add(id);
-//            messageSend(connected,"true");
+    //new identity
+    private void newID(String id, Socket connected, String fromclient) throws IOException {
+        if (checkID(id) && !clientObjectList.containsKey(id)) {
+            System.out.println("Recieved correct ID ::" + fromclient);
+
+            clientState client = new clientState(id, mainhall.getRoomId(), connected.getPort());
+            mainhall.addParticipants(client);
+            clientObjectList.put(id, client);
+
+            clientList.put(id, connected.getPort());
+            reverseClientList.put(connected.getPort(), id);
+
             synchronized (connected) {
-                messageSend(connected,"newid true");
-                messageSend(connected,"roomchange "+id+" MainHall-"+serverID);
+                messageSend(connected, "newid true");
+                messageSend(connected, "roomchange " + id + " MainHall-" + serverID);
             }
         } else {
-            System.out.println("Recieved wrong ID type:: The identity must be an alphanumeric string starting with an upper or lower case character. It must be at least 3 characters and no more than 16 characters long.");
-            messageSend(connected,"newid false");
+            System.out.println("Recieved wrong ID type or ID already in use");
+            messageSend(connected, "newid false");
+        }
+    }
+
+    //create room
+    private void createRoom(String roomID, Socket connected, String fromclient) throws IOException {
+        String id = reverseClientList.get(connected.getPort());
+        if (checkID(roomID) && !roomObjectList.containsKey(roomID) && !globalRoomList.containsValue(id)) {
+            System.out.println("Recieved correct room ID ::" + fromclient);
+
+            clientState client = clientObjectList.get(id);
+            String former = client.getRoomID();
+            roomObjectList.get(former).removeParticipants(client);
+
+            Room newRoom = new Room(id,roomID);
+            roomObjectList.put(roomID,newRoom);
+            globalRoomList.put(roomID, id);
+
+            client.setRoomID(roomID);
+
+            synchronized (connected) {
+                messageSend(connected, "createroom " + roomID + " true");
+                messageSend(connected, "createroomchange " + id + " "+ former +" " + roomID);
+            }
+        } else {
+            System.out.println("Recieved wrong room ID type or room ID already in use");
+            messageSend(connected, "createroom " + roomID + " false");
         }
     }
 
@@ -93,9 +146,8 @@ public class Server implements Runnable{
 
                     fromclient = inFromClient.readLine();
 
-                    //convert received message to json object
-
                     try {
+                        //convert received message to json object
                         Object object = null;
                         JSONParser jsonParser = new JSONParser();
                         object = jsonParser.parse(fromclient);
@@ -106,6 +158,10 @@ public class Server implements Runnable{
                             if (j_object.get("type").equals("newidentity") && j_object.get("identity") != null) {
                                 String id = j_object.get("identity").toString();
                                 newID(id, connected, fromclient);
+                            } //check create room
+                            if (j_object.get("type").equals("createroom") && j_object.get("roomid") != null) {
+                                String roomID = j_object.get("roomid").toString();
+                                createRoom(roomID, connected, fromclient);
                             }
                         } else {
                             System.out.println("Something went wrong");

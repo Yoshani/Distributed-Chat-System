@@ -15,7 +15,6 @@ import java.util.List;
 public class ClientHandler extends Thread {
 
     private String serverID;   //server id which is given when starting the server
-    private ArrayList<ClientHandler> threadList;
     private Socket clientSocket;
 
     private PrintWriter printWriter;
@@ -29,13 +28,12 @@ public class ClientHandler extends Thread {
     private static HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
     private Room mainhall;
 
-    public ClientHandler(String id, Socket clientSocket, ArrayList<ClientHandler> threads) {
-        this.serverID = id;
+    public ClientHandler(Socket clientSocket) {
+        this.serverID = ServerState.getInstance().getServerID();
         mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
         roomObjectList.put("MainHall-" + serverID, mainhall);
         globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
         this.clientSocket = clientSocket;
-        this.threadList = threads;
     }
 
     //check the existence of a key in json object
@@ -222,7 +220,7 @@ public class ClientHandler extends Thread {
     }
 
     private void printToAllClients(String fromClient){
-        for(ClientHandler thread:threadList){
+        for(ClientHandler thread:ServerState.getInstance().getClientHandlerList()){
             thread.printWriter.println(fromClient);
         }
     }

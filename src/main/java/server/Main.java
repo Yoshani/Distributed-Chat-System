@@ -5,33 +5,32 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Main
-{
-    public static void main( String[] args ) {
+public class Main {
+    public static void main(String[] args) {
         System.out.println("------server started------");
 
-        Scanner scanner = new Scanner(System.in);  // Create a Scanner object
+        Scanner scanner = new Scanner(System.in);  // Create a Scanner object // TODO : remove
         System.out.println("Enter server ID : ");
 
-        String serverID = scanner.nextLine();  // Read user input
+        String serverID = scanner.nextLine();  // Read user input //TODO : change to auto fetch from config
 
-        ArrayList<ClientHandler> clientHandlerList = new ArrayList<>();
-        try{
+        ServerState.getInstance().setServerID(serverID);
+
+
+        try {
             ServerSocket serverSocket = new ServerSocket(5000);
-            //System.out.println(serverSocket.getInetAddress());
-            //System.out.println(serverSocket.getLocalPort());
             System.out.println(serverSocket.getLocalSocketAddress());
             System.out.println("LOG: TCP Server Waiting for clients on port 5000"); //client should use 5000 as port
-            while(true){
+            while (true) {
                 Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(serverID,clientSocket, clientHandlerList);
+                ClientHandler clientHandler = new ClientHandler(clientSocket);
                 //starting the tread
-                clientHandlerList.add(clientHandler);
+                ServerState.getInstance().getClientHandlerList().add(clientHandler);
                 clientHandler.start();
             }
 
-        } catch (Exception e){
-            System.out.println("Error occured in main "+ e.getStackTrace());
+        } catch (Exception e) {
+            System.out.println("Error occured in main " + e.getStackTrace());
         }
     }
 }

@@ -13,9 +13,9 @@ public class ServerState {
 
     private final HashMap<String, Integer> clientPortMap = new HashMap<>(); //client list <clientID,port>
     private final HashMap<Integer, String> portClientMap = new HashMap<>(); //client list  <port,clientID>
-    private final HashMap<String, String> ownerRoomServerLocalMap = new HashMap<>(); //global rooms with their owners <roomID,ownerID>
+//    private final HashMap<String, String> ownerRoomServerLocalMap = new HashMap<>(); //global rooms with their owners <roomID,ownerID>
 
-    private final HashMap<String, clientState> clientStateMap = new HashMap<>();  //maintain room object list  <clientID,clientState>
+    private final HashMap<String, ClientState> clientStateMap = new HashMap<>();  //maintain room object list  <clientID,clientState>
     private final HashMap<String, Room> roomMap = new HashMap<>();  //maintain room object list <roomID,roomObject>
 
     //singleton
@@ -40,8 +40,11 @@ public class ServerState {
         this.serverID = serverID;
         this.serverPort = serverPort;
         this.mainHall = new Room("default-" + serverID, "MainHall-" + serverID);
-        roomMap.put("MainHall-" + serverID, mainHall);
-        ownerRoomServerLocalMap.put("MainHall-" + serverID, "default-" + serverID);
+        this.roomMap.put("MainHall-" + serverID, mainHall);
+    }
+
+    public void addClientHandlerThreadToList(ClientHandlerThread clientHandlerThread) {
+        clientHandlerThreadList.add(clientHandlerThread);
     }
 
     public String getServerID() {
@@ -56,9 +59,6 @@ public class ServerState {
         return mainHall;
     }
 
-    public ArrayList<ClientHandlerThread> getClientHandlerThreadList() {
-        return clientHandlerThreadList;
-    }
 
     public HashMap<String, Integer> getClientPortMap() {
         return clientPortMap;
@@ -68,11 +68,7 @@ public class ServerState {
         return portClientMap;
     }
 
-    public HashMap<String, String> getOwnerRoomServerLocalMap() {
-        return ownerRoomServerLocalMap;
-    }
-
-    public HashMap<String, clientState> getClientStateMap() {
+    public HashMap<String, ClientState> getClientStateMap() {
         return clientStateMap;
     }
 

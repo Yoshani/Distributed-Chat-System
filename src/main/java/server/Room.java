@@ -4,37 +4,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Room {
-    private String owner;
-    private String roomId;
-    private List<clientState> participants = new ArrayList<clientState>();
+    private String ownerID;
+    private String roomID;
+    private List<ClientState> participants = new ArrayList<ClientState>();
 
-    public Room(String identity, String roomId) {
-        this.owner = identity;
-        this.roomId = roomId;
+    public Room(String identity, String roomID) {
+        this.ownerID = identity;
+        this.roomID = roomID;
     }
 
-    public synchronized String getRoomId() {
-        return roomId;
+    public synchronized String getRoomID() {
+        return roomID;
     }
 
-    public synchronized void setRoomId(String roomId) {
-        this.roomId = roomId;
+    public synchronized void setRoomID(String roomID) {
+        this.roomID = roomID;
     }
 
-    public synchronized List<clientState> getParticipants() {
+    public synchronized List<ClientState> getParticipants() {
         return this.participants;
     }
 
-    public synchronized void addParticipants(clientState participantID) {
+    public synchronized void addParticipants(ClientState participantID) {
         this.participants.add(participantID);
     }
 
-    public synchronized void removeParticipants(clientState participantID) {
+    public synchronized void removeParticipants(ClientState participantID) {
         this.participants.remove(participantID);
     }
 
     public String getOwnerIdentity() {
-        return owner;
+        return ownerID;
     }
 
 }

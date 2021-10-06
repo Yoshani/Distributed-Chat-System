@@ -21,7 +21,7 @@ public class ClientHandlerThread extends Thread {
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
-        ServerState.getInstance().getOwnerRoomServerLocalMap().put("MainHall-" + serverID, "default-" + serverID);
+
         this.clientSocket = clientSocket;
     }
 
@@ -76,7 +76,7 @@ public class ClientHandlerThread extends Thread {
         if (checkID(id) && !ServerState.getInstance().getClientStateMap().containsKey(id)) {
             System.out.println("Recieved correct ID ::" + fromClient);
 
-            clientState client = new clientState(id, ServerState.getInstance().getMainHall().getRoomId(), connected.getPort());
+            ClientState client = new ClientState(id, ServerState.getInstance().getMainHall().getRoomID(), connected.getPort());
             ServerState.getInstance().getMainHall().addParticipants(client);
             ServerState.getInstance().getClientStateMap().put(id, client);
 
@@ -96,16 +96,15 @@ public class ClientHandlerThread extends Thread {
     //create room
     private void createRoom(String roomID, Socket connected, String fromClient) throws IOException {
         String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
-        if (checkID(roomID) && !ServerState.getInstance().getRoomMap().containsKey(roomID) && !ServerState.getInstance().getOwnerRoomServerLocalMap().containsValue(id)) {
+        if (checkID(roomID) && !ServerState.getInstance().getRoomMap().containsKey(roomID)) {
             System.out.println("Recieved correct room ID ::" + fromClient);
 
-            clientState client = ServerState.getInstance().getClientStateMap().get(id);
+            ClientState client = ServerState.getInstance().getClientStateMap().get(id);
             String former = client.getRoomID();
             ServerState.getInstance().getRoomMap().get(former).removeParticipants(client);
 
             Room newRoom = new Room(id, roomID);
             ServerState.getInstance().getRoomMap().put(roomID, newRoom);
-            ServerState.getInstance().getOwnerRoomServerLocalMap().put(roomID, id);
 
             client.setRoomID(roomID);
             newRoom.addParticipants(client);
@@ -123,10 +122,10 @@ public class ClientHandlerThread extends Thread {
     //who
     private void who(Socket connected, String fromClient) throws IOException {
         String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
-        clientState client = ServerState.getInstance().getClientStateMap().get(id);
+        ClientState client = ServerState.getInstance().getClientStateMap().get(id);
         String roomID = client.getRoomID();
         Room room = ServerState.getInstance().getRoomMap().get(roomID);
-        List<clientState> clients = room.getParticipants();
+        List<ClientState> clients = room.getParticipants();
 
         List<String> participants = new ArrayList<String>();
         System.out.println("room contains :");

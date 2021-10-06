@@ -15,7 +15,7 @@ public class Main {
 
         String serverID = scanner.nextLine();  // Read user input
 
-        ServerState.getInstance().initializeWithConfigs(serverID,5000);//TODO : change to auto fetch from config
+        ServerState.getInstance().initializeWithConfigs(serverID, 5000);//TODO : change to auto fetch from config
 
 
         try {
@@ -26,7 +26,7 @@ public class Main {
                 Socket clientSocket = serverSocket.accept();
                 ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
                 //starting the tread
-                ServerState.getInstance().getClientHandlerThreadList().add(clientHandlerThread);
+                ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);
                 clientHandlerThread.start();
             }
 

@@ -1,12 +1,12 @@
 package server;
 
-public class clientState {
+public class ClientState {
 
     private String id;
     private String roomID;
     private Integer port;
 
-    public clientState(String id, String roomID, Integer port){
+    public ClientState(String id, String roomID, Integer port) {
         this.id = id;
         this.roomID = roomID;
         this.port = port;
@@ -36,8 +36,8 @@ public class clientState {
         this.roomID = roomID;
     }
 
-    public String getIDbyPort(Integer port){
-        if (this.port==port){
+    public String getIDbyPort(Integer port) {
+        if (this.port == port) {
             return this.id;
         } else {
             return null;

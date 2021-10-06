@@ -15,29 +15,34 @@ public class ServerMessage {
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getRoomChange(String id, String MainHall) {
+    public static JSONObject getJoinRoomOnCreate(String clientID, String MainHall) {
+        return getJoinRoom(clientID, "", MainHall);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getJoinRoom(String clientID, String formerRoomID, String roomID) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "roomchange");
-        jsonObject.put("identity", id);
-        jsonObject.put("former", "");
-        jsonObject.put("roomid", MainHall);
+        jsonObject.put("identity", clientID);
+        jsonObject.put("former", formerRoomID);
+        jsonObject.put("roomid", roomID);
         return jsonObject;
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getCreateRoom(String id, String approve) {
+    public static JSONObject getCreateRoom(String roomID, String approve) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "createroom");
-        jsonObject.put("roomid", id);
+        jsonObject.put("roomid", roomID);
         jsonObject.put("approved", approve);
         return jsonObject;
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getCreateRoomChange(String id, String former, String roomID) {
+    public static JSONObject getCreateRoomChange(String clientID, String former, String roomID) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "roomchange");
-        jsonObject.put("identity", id);
+        jsonObject.put("identity", clientID);
         jsonObject.put("former", former);
         jsonObject.put("roomid", roomID);
         return jsonObject;

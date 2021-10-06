@@ -17,9 +17,8 @@ public class ClientHandler extends Thread {
     private String serverID;   //server id which is given when starting the server
     private Socket clientSocket;
 
-    private PrintWriter printWriter;
     private DataOutputStream dataOutputStream;
-    private ServerSocket serverSocket;
+
     private static HashMap<String, Integer> clientList = new HashMap<String, Integer>(); //client list
     private static HashMap<Integer, String> reverseClientList = new HashMap<Integer, String>(); //client list
     private static HashMap<String, String> globalRoomList = new HashMap<String, String>(); //global rooms with their owners
@@ -151,7 +150,7 @@ public class ClientHandler extends Thread {
     private void list(Socket connected, String fromClient) throws IOException {
         List<String> rooms = new ArrayList<>();
         System.out.println("rooms in the system :");
-        for(String r:roomObjectList.keySet()){
+        for (String r : roomObjectList.keySet()) {
             rooms.add(r);
             System.out.println(r);
         }
@@ -175,7 +174,7 @@ public class ClientHandler extends Thread {
 
                 String fromclient = inFromClient.readLine();
 
-                if(fromclient.equalsIgnoreCase("exit")){
+                if (fromclient.equalsIgnoreCase("exit")) {
                     break;
                 }
 
@@ -217,9 +216,4 @@ public class ClientHandler extends Thread {
 
     }
 
-    private void printToAllClients(String fromClient){
-        for(ClientHandler thread:ServerState.getInstance().getClientHandlerList()){
-            thread.printWriter.println(fromClient);
-        }
-    }
 }

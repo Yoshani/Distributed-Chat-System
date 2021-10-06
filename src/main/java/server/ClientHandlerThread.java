@@ -129,14 +129,10 @@ public class ClientHandlerThread extends Thread {
 
     //list
     private void list(Socket connected, String jsonStringFromClient) throws IOException {
-        List<String> rooms = new ArrayList<>();
-        System.out.println("INFO : rooms in the system :");
-        for (String r : ServerState.getInstance().getRoomMap().keySet()) {
-            rooms.add(r);
-            System.out.println(r);
-        }
+        List<String> roomsList = new ArrayList<>(ServerState.getInstance().getRoomMap().keySet());
 
-        messageSend(connected, "roomlist ", rooms);
+        System.out.println("INFO : rooms in the system :");
+        messageSend(connected, "roomlist ", roomsList);
     }
 
     @Override

@@ -3,6 +3,7 @@ package server;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Main {
@@ -31,7 +32,7 @@ public class Main {
             }
 
         } catch (Exception e) {
-            System.out.println("ERROR : occured in main " + e.getStackTrace());
+            System.out.println("ERROR : occurred in main " + Arrays.toString(e.getStackTrace()));
         }
     }
 }

@@ -7,19 +7,20 @@ import org.json.simple.parser.ParseException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class Server extends Thread {
+public class ClientHanlder extends Thread {
 
     private String serverID;   //server id which is given when starting the server
-    private ArrayList<Server> threadList;
-    private Socket connected;
+    private ArrayList<ClientHanlder> threadList;
+    private Socket clientSocket;
 
-    private PrintWriter output;
-    private DataOutputStream out;
-    private ServerSocket Server;
+    private PrintWriter printWriter;
+    private DataOutputStream dataOutputStream;
+    private ServerSocket serverSocket;
     private static HashMap<String, Integer> clientList = new HashMap<String, Integer>(); //client list
     private static HashMap<Integer, String> reverseClientList = new HashMap<Integer, String>(); //client list
     private static HashMap<String, String> globalRoomList = new HashMap<String, String>(); //global rooms with their owners
@@ -28,12 +29,12 @@ public class Server extends Thread {
     private static HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
     private Room mainhall;
 
-    public Server(String id, Socket socket, ArrayList<Server> threads) {
+    public ClientHanlder(String id, Socket socket, ArrayList<ClientHanlder> threads) {
         this.serverID = id;
         mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
         roomObjectList.put("MainHall-" + serverID, mainhall);
         globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
-        this.connected = socket;
+        this.clientSocket = socket;
         this.threadList = threads;
     }
 
@@ -49,8 +50,8 @@ public class Server extends Thread {
 
     //send message to client
     private void send(JSONObject obj) throws IOException {
-        out.write((obj.toJSONString() + "\n").getBytes("UTF-8"));
-        out.flush();
+        dataOutputStream.write((obj.toJSONString() + "\n").getBytes("UTF-8"));
+        dataOutputStream.flush();
     }
 
     //format message before sending it to client
@@ -84,9 +85,9 @@ public class Server extends Thread {
     }
 
     //new identity
-    private void newID(String id, Socket connected, String fromclient) throws IOException {
+    private void newID(String id, Socket connected, String fromClient) throws IOException {
         if (checkID(id) && !clientObjectList.containsKey(id)) {
-            System.out.println("Recieved correct ID ::" + fromclient);
+            System.out.println("Recieved correct ID ::" + fromClient);
 
             clientState client = new clientState(id, mainhall.getRoomId(), connected.getPort());
             mainhall.addParticipants(client);
@@ -106,10 +107,10 @@ public class Server extends Thread {
     }
 
     //create room
-    private void createRoom(String roomID, Socket connected, String fromclient) throws IOException {
+    private void createRoom(String roomID, Socket connected, String fromClient) throws IOException {
         String id = reverseClientList.get(connected.getPort());
         if (checkID(roomID) && !roomObjectList.containsKey(roomID) && !globalRoomList.containsValue(id)) {
-            System.out.println("Recieved correct room ID ::" + fromclient);
+            System.out.println("Recieved correct room ID ::" + fromClient);
 
             clientState client = clientObjectList.get(id);
             String former = client.getRoomID();
@@ -133,7 +134,7 @@ public class Server extends Thread {
     }
 
     //who
-    private void who(Socket connected, String fromclient) throws IOException {
+    private void who(Socket connected, String fromClient) throws IOException {
         String id = reverseClientList.get(connected.getPort());
         clientState client = clientObjectList.get(id);
         String roomID = client.getRoomID();
@@ -151,7 +152,7 @@ public class Server extends Thread {
     }
 
     //list
-    private void list(Socket connected, String fromclient) throws IOException {
+    private void list(Socket connected, String fromClient) throws IOException {
         List<String> rooms = new ArrayList<>();
         System.out.println("rooms in the system :");
         for(String r:roomObjectList.keySet()){
@@ -165,13 +166,13 @@ public class Server extends Thread {
     @Override
     public void run() {
         try {
-            System.out.println(" THE CLIENT" + " " + connected.getInetAddress()
-                    + ":" + connected.getPort() + " IS CONNECTED ");
+            System.out.println(" THE CLIENT" + " " + clientSocket.getInetAddress()
+                    + ":" + clientSocket.getPort() + " IS CONNECTED ");
 
             BufferedReader inFromClient = new BufferedReader(
-                    new InputStreamReader(connected.getInputStream(), "UTF-8"));
+                    new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
-            out = new DataOutputStream(connected.getOutputStream());
+            dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
 
             while (true) {
@@ -193,17 +194,17 @@ public class Server extends Thread {
                         //check new identity format
                         if (j_object.get("type").equals("newidentity") && j_object.get("identity") != null) {
                             String id = j_object.get("identity").toString();
-                            newID(id, connected, fromclient);
+                            newID(id, clientSocket, fromclient);
                         } //check create room
                         if (j_object.get("type").equals("createroom") && j_object.get("roomid") != null) {
                             String roomID = j_object.get("roomid").toString();
-                            createRoom(roomID, connected, fromclient);
+                            createRoom(roomID, clientSocket, fromclient);
                         } //check who
                         if (j_object.get("type").equals("who")) {
-                            who(connected, fromclient);
+                            who(clientSocket, fromclient);
                         } //check list
                         if (j_object.get("type").equals("list")) {
-                            list(connected, fromclient);
+                            list(clientSocket, fromclient);
                         }
                     } else {
                         System.out.println("Something went wrong");
@@ -220,9 +221,9 @@ public class Server extends Thread {
 
     }
 
-    private void printToAllClients(String fromclient){
-        for(Server thread:threadList){
-            thread.output.println(fromclient);
+    private void printToAllClients(String fromClient){
+        for(ClientHanlder thread:threadList){
+            thread.printWriter.println(fromClient);
         }
     }
 }

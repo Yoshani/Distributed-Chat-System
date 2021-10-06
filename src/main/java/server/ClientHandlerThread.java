@@ -13,7 +13,7 @@ import java.util.List;
 public class ClientHandlerThread extends Thread {
 
     private final Socket clientSocket;
-    //TODO : have client state in thread
+    private ClientState clientState;
 
     //TODO : check input stream local var
     private DataOutputStream dataOutputStream;
@@ -72,20 +72,17 @@ public class ClientHandlerThread extends Thread {
     }
 
     //new identity
-    private void newID(String id, Socket connected, String jsonStringFromClient) throws IOException {
-        if (checkID(id) && !ServerState.getInstance().getClientStateMap().containsKey(id)) {
+    private void newID(String clientID, Socket connected, String jsonStringFromClient) throws IOException {
+        if (checkID(clientID) && !ServerState.getInstance().getClientStateMap().containsKey(clientID)) {
             System.out.println("INFO : Recieved correct ID ::" + jsonStringFromClient);
 
-            ClientState client = new ClientState(id, ServerState.getInstance().getMainHall().getRoomID(), connected.getPort());
-            ServerState.getInstance().getMainHall().addParticipants(client);
-            ServerState.getInstance().getClientStateMap().put(id, client);
-
-            ServerState.getInstance().getClientPortMap().put(id, connected.getPort());
-            ServerState.getInstance().getPortClientMap().put(connected.getPort(), id);
+            this.clientState = new ClientState(clientID, ServerState.getInstance().getMainHall().getRoomID(), connected.getPort());
+            ServerState.getInstance().getMainHall().addParticipants(clientState);
+            ServerState.getInstance().getClientStateMap().put(clientID, clientState);
 
             synchronized (connected) {
                 messageSend(connected, "newid true", null);
-                messageSend(connected, "roomchange " + id + " MainHall-" + ServerState.getInstance().getServerID(), null);
+                messageSend(connected, "roomchange " + clientID + " MainHall-" + ServerState.getInstance().getServerID(), null);
             }
         } else {
             System.out.println("WARN : Recieved wrong ID type or ID already in use");
@@ -94,36 +91,32 @@ public class ClientHandlerThread extends Thread {
     }
 
     //create room
-    private void createRoom(String roomID, Socket connected, String jsonStringFromClient) throws IOException {
-        String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
-        if (checkID(roomID) && !ServerState.getInstance().getRoomMap().containsKey(roomID)) {
+    private void createRoom(String newRoomID, Socket connected, String jsonStringFromClient) throws IOException {
+        if (checkID(newRoomID) && !ServerState.getInstance().getRoomMap().containsKey(newRoomID)) {
             System.out.println("INFO : Received correct room ID ::" + jsonStringFromClient);
 
-            ClientState client = ServerState.getInstance().getClientStateMap().get(id);
-            String former = client.getRoomID();
-            ServerState.getInstance().getRoomMap().get(former).removeParticipants(client);
+            String formerRoomID = clientState.getRoomID();
+            ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
 
-            Room newRoom = new Room(id, roomID);
-            ServerState.getInstance().getRoomMap().put(roomID, newRoom);
+            Room newRoom = new Room(clientState.getClientID(), newRoomID);
+            ServerState.getInstance().getRoomMap().put(newRoomID, newRoom);
 
-            client.setRoomID(roomID);
-            newRoom.addParticipants(client);
+            clientState.setRoomID(newRoomID);
+            newRoom.addParticipants(clientState);
 
             synchronized (connected) {
-                messageSend(connected, "createroom " + roomID + " true", null);
-                messageSend(connected, "createroomchange " + id + " " + former + " " + roomID, null);
+                messageSend(connected, "createroom " + newRoomID + " true", null);
+                messageSend(connected, "createroomchange " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null);
             }
         } else {
             System.out.println("WARN : Recieved wrong room ID type or room ID already in use");
-            messageSend(connected, "createroom " + roomID + " false", null);
+            messageSend(connected, "createroom " + newRoomID + " false", null);
         }
     }
 
     //who
     private void who(Socket connected, String jsonStringFromClient) throws IOException {
-        String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
-        ClientState client = ServerState.getInstance().getClientStateMap().get(id);
-        String roomID = client.getRoomID();
+        String roomID = clientState.getRoomID();
         Room room = ServerState.getInstance().getRoomMap().get(roomID);
         List<ClientState> clients = room.getParticipants();
 

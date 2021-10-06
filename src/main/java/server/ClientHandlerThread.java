@@ -38,7 +38,7 @@ public class ClientHandlerThread extends Thread {
 
     //send message to client
     private void send(JSONObject obj) throws IOException {
-        dataOutputStream.write((obj.toJSONString() + "\n").getBytes("UTF-8"));
+        dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
         dataOutputStream.flush();
     }
 
@@ -63,6 +63,9 @@ public class ClientHandlerThread extends Thread {
             send(sendToClient);
         } else if (array[0].equals("roomlist")) {
             sendToClient = ServerMessage.getList(msgList);
+            send(sendToClient);
+        } else if (array[0].equals("deleteroom")) {
+            sendToClient = ServerMessage.getDeleteRoom(array[1], array[2]);
             send(sendToClient);
         }
     }
@@ -120,7 +123,7 @@ public class ClientHandlerThread extends Thread {
             clientState.setRoomID(newRoomID);
             newRoom.addParticipants(clientState);
 
-            synchronized (connected) {
+            synchronized (connected) { //TODO : check sync | lock on out buffer?
                 messageSend(connected, "createroom " + newRoomID + " true", null);
                 messageSend(connected, "createroomchange " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null);
             }
@@ -135,7 +138,7 @@ public class ClientHandlerThread extends Thread {
         String formerRoomId = clientState.getRoomID();
 
         if (ServerState.getInstance().getRoomMap().containsKey(roomID)) {
-
+            //TODO : check sync
             clientState.setRoomID(roomID);
             ServerState.getInstance().getRoomMap().get(formerRoomId).removeParticipants(clientState);
             ServerState.getInstance().getRoomMap().get(roomID).addParticipants(clientState);
@@ -147,6 +150,37 @@ public class ClientHandlerThread extends Thread {
         } else {
             System.out.println("WARN : Received room ID does not exist");
             messageSend(connected, "roomchange " + clientState.getClientID() + " " + formerRoomId + " " + formerRoomId, null);
+        }
+    }
+
+    //join room
+    private void deleteRoom(String roomID, Socket connected, String jsonStringFromClient) throws IOException {
+        String formerRoomID = clientState.getRoomID();
+
+        if (ServerState.getInstance().getRoomMap().containsKey(roomID)) {
+            //TODO : check sync
+            Room room = ServerState.getInstance().getRoomMap().get(roomID);
+            if (room.getOwnerIdentity().equals(clientState.getClientID())) {
+
+                String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
+
+                clientState.setRoomID(mainHallRoomID);
+                ServerState.getInstance().getRoomMap().remove(roomID);
+                ServerState.getInstance().getRoomMap().get(mainHallRoomID).addParticipants(clientState);
+
+                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
+                messageSend(connected, "deleteroom " + roomID + " true", null);
+                messageSend(connected, "roomchange " + clientState.getClientID() + " " + roomID + " " + mainHallRoomID, null);
+                //todo : move all members to mainhall
+            } else {
+                messageSend(connected, "deleteroom " + roomID + " false", null);
+                System.out.println("WARN : Requesting client [" + clientState.getClientID() + "] does not own the room ID [" + roomID + "]");
+            }
+            //TODO : check global, room change all members
+            // } else if(inAnotherServer){
+        } else {
+            System.out.println("WARN : Received room ID [" + roomID + "] does not exist");
+            messageSend(connected, "deleteroom " + roomID + " false", null);
         }
     }
 
@@ -196,6 +230,10 @@ public class ClientHandlerThread extends Thread {
                         if (j_object.get("type").equals("joinroom")) {
                             String roomID = j_object.get("roomid").toString();
                             joinRoom(roomID, clientSocket, jsonStringFromClient);
+                        }
+                        if (j_object.get("type").equals("deleteroom")) {
+                            String roomID = j_object.get("roomid").toString();
+                            deleteRoom(roomID, clientSocket, jsonStringFromClient);
                         }
                     } else {
                         System.out.println("WARN : Command error, Corrupted JSON");

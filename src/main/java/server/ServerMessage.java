@@ -65,4 +65,13 @@ public class ServerMessage {
         jsonObject.put("rooms", rooms);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getDeleteRoom(String roomID, String isApproved) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "deleteroom");
+        jsonObject.put("roomid", roomID);
+        jsonObject.put("approved", isApproved);
+        return jsonObject;
+    }
 }

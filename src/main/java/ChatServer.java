@@ -1,60 +1,109 @@
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
-
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import messaging.MessageThread;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-
-import org.json.simple.parser.ParseException;
 import java.io.IOException;
 
+import java.io.*;
 
-public class ChatServer {
-    public static void main(String[] args) {
-
-        Logger logger = LoggerFactory.getLogger(ChatServer.class);
-
-        logger.debug("Application Started");
+// Server class
+class ChatServer {
+    public static void main(String[] args)
+    {
+        ServerSocket server = null;
 
         try {
-            ServerSocket serverSocket = new ServerSocket(6666);
-            System.out.println(serverSocket.getInetAddress());
-            System.out.println(serverSocket.getLocalSocketAddress());
-            System.out.println(serverSocket.getLocalPort());
 
+            // server is listening on port 1234
+            server = new ServerSocket(4444);
+            server.setReuseAddress(true);
 
-            Socket socket = serverSocket.accept();
+            boolean debug = false;
 
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
-                    socket.getInputStream(), StandardCharsets.UTF_8));
+            // running infinite loop for getting client request
+            while (true) {
 
-            boolean close = false;
-            JSONParser jsonParser = new JSONParser();
+                // socket object to receive incoming client requests
+                Socket client = server.accept();
 
-            while (!close) {
-                String response = bufferedReader.readLine();
+                // Displaying that new client is connected to server
+                System.out.println("New client connected: " + client.getInetAddress().getHostAddress());
 
+                // start client thread
+                Thread clientThread = new Thread(new MessageThread(client, debug));
+                clientThread.start();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (server != null) {
                 try {
-                    JSONObject obj = (JSONObject) jsonParser.parse(response);
-                    logger.debug("Obj : " + obj);
-                } catch (ParseException e) {
+                    server.close();
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
-
-//                close = str.contains("#quit");
             }
+        }
+    }
 
-            serverSocket.close();
+    // ClientHandler class
+    private static class ClientHandler implements Runnable {
+        private final Socket clientSocket;
 
+        // Constructor
+        public ClientHandler(Socket socket)
+        {
+            this.clientSocket = socket;
+        }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        public void run()
+        {
+            PrintWriter out = null;
+            BufferedReader in = null;
+            try {
+
+                // get the outputstream of client
+                out = new PrintWriter(
+                        clientSocket.getOutputStream(), true);
+
+                // get the inputstream of client
+                in = new BufferedReader(
+                        new InputStreamReader(
+                                clientSocket.getInputStream()));
+
+                String line;
+                while ((line = in.readLine()) != null) {
+
+                    // writing the received message from client
+                    System.out.printf(
+                            " Sent from the client: %s\n",
+                            line);
+                    out.println(line);
+                }
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            finally {
+                try {
+                    if (out != null) {
+                        out.close();
+                    }
+                    if (in != null) {
+                        in.close();
+                        clientSocket.close();
+                    }
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

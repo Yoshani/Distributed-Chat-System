@@ -72,9 +72,9 @@ public class ClientHandlerThread extends Thread {
     }
 
     //new identity
-    private void newID(String id, Socket connected, String fromClient) throws IOException {
+    private void newID(String id, Socket connected, String jsonStringFromClient) throws IOException {
         if (checkID(id) && !ServerState.getInstance().getClientStateMap().containsKey(id)) {
-            System.out.println("Recieved correct ID ::" + fromClient);
+            System.out.println("INFO : Recieved correct ID ::" + jsonStringFromClient);
 
             ClientState client = new ClientState(id, ServerState.getInstance().getMainHall().getRoomID(), connected.getPort());
             ServerState.getInstance().getMainHall().addParticipants(client);
@@ -88,16 +88,16 @@ public class ClientHandlerThread extends Thread {
                 messageSend(connected, "roomchange " + id + " MainHall-" + ServerState.getInstance().getServerID(), null);
             }
         } else {
-            System.out.println("Recieved wrong ID type or ID already in use");
+            System.out.println("WARN : Recieved wrong ID type or ID already in use");
             messageSend(connected, "newid false", null);
         }
     }
 
     //create room
-    private void createRoom(String roomID, Socket connected, String fromClient) throws IOException {
+    private void createRoom(String roomID, Socket connected, String jsonStringFromClient) throws IOException {
         String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
         if (checkID(roomID) && !ServerState.getInstance().getRoomMap().containsKey(roomID)) {
-            System.out.println("Recieved correct room ID ::" + fromClient);
+            System.out.println("INFO : Received correct room ID ::" + jsonStringFromClient);
 
             ClientState client = ServerState.getInstance().getClientStateMap().get(id);
             String former = client.getRoomID();
@@ -114,13 +114,13 @@ public class ClientHandlerThread extends Thread {
                 messageSend(connected, "createroomchange " + id + " " + former + " " + roomID, null);
             }
         } else {
-            System.out.println("Recieved wrong room ID type or room ID already in use");
+            System.out.println("WARN : Recieved wrong room ID type or room ID already in use");
             messageSend(connected, "createroom " + roomID + " false", null);
         }
     }
 
     //who
-    private void who(Socket connected, String fromClient) throws IOException {
+    private void who(Socket connected, String jsonStringFromClient) throws IOException {
         String id = ServerState.getInstance().getPortClientMap().get(connected.getPort());
         ClientState client = ServerState.getInstance().getClientStateMap().get(id);
         String roomID = client.getRoomID();
@@ -138,9 +138,9 @@ public class ClientHandlerThread extends Thread {
     }
 
     //list
-    private void list(Socket connected, String fromClient) throws IOException {
+    private void list(Socket connected, String jsonStringFromClient) throws IOException {
         List<String> rooms = new ArrayList<>();
-        System.out.println("rooms in the system :");
+        System.out.println("INFO : rooms in the system :");
         for (String r : ServerState.getInstance().getRoomMap().keySet()) {
             rooms.add(r);
             System.out.println(r);
@@ -152,20 +152,20 @@ public class ClientHandlerThread extends Thread {
     @Override
     public void run() {
         try {
-            System.out.println(" THE CLIENT" + " " + clientSocket.getInetAddress()
+            System.out.println("INFO : THE CLIENT" + " " + clientSocket.getInetAddress()
                     + ":" + clientSocket.getPort() + " IS CONNECTED ");
 
-            BufferedReader inFromClient = new BufferedReader(
+            BufferedReader bufferedReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
-            dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
+            this.dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
 
 
             while (true) {
 
-                String fromclient = inFromClient.readLine();
+                String jsonStringFromClient = bufferedReader.readLine();
 
-                if (fromclient.equalsIgnoreCase("exit")) {
+                if (jsonStringFromClient.equalsIgnoreCase("exit")) {
                     break;
                 }
 
@@ -173,27 +173,27 @@ public class ClientHandlerThread extends Thread {
                     //convert received message to json object
                     Object object = null;
                     JSONParser jsonParser = new JSONParser();
-                    object = jsonParser.parse(fromclient);
+                    object = jsonParser.parse(jsonStringFromClient);
                     JSONObject j_object = (JSONObject) object;
 
                     if (hasKey(j_object, "type")) {
                         //check new identity format
                         if (j_object.get("type").equals("newidentity") && j_object.get("identity") != null) {
                             String id = j_object.get("identity").toString();
-                            newID(id, clientSocket, fromclient);
+                            newID(id, clientSocket, jsonStringFromClient);
                         } //check create room
                         if (j_object.get("type").equals("createroom") && j_object.get("roomid") != null) {
                             String roomID = j_object.get("roomid").toString();
-                            createRoom(roomID, clientSocket, fromclient);
+                            createRoom(roomID, clientSocket, jsonStringFromClient);
                         } //check who
                         if (j_object.get("type").equals("who")) {
-                            who(clientSocket, fromclient);
+                            who(clientSocket, jsonStringFromClient);
                         } //check list
                         if (j_object.get("type").equals("list")) {
-                            list(clientSocket, fromclient);
+                            list(clientSocket, jsonStringFromClient);
                         }
                     } else {
-                        System.out.println("Something went wrong");
+                        System.out.println("WARN : Command error, Corrupted JSON");
                     }
 
                 } catch (ParseException e) {

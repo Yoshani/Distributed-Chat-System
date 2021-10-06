@@ -8,10 +8,10 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         //TODO : Load configs
-        System.out.println("------server started------");
+        System.out.println("LOG  : ------server started------");
 
         Scanner scanner = new Scanner(System.in);  // Create a Scanner object
-        System.out.println("Enter server ID : ");
+        System.out.println("INFO : Enter server ID : ");
 
         String serverID = scanner.nextLine();  // Read user input
 

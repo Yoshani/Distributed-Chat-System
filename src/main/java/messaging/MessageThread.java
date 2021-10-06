@@ -41,15 +41,25 @@ public class MessageThread implements Runnable
                 }
                 MessageReceive(socket, message);
             }
-            System.exit(0);
-            in.close();
-            socket.close();
         } catch ( ParseException e) {
             System.out.println("Message Error: " + e.getMessage());
             System.exit(1);
         } catch (IOException e) {
             System.out.println("Communication Error: " + e.getMessage());
             System.exit(1);
+        }finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                if (in != null) {
+                    in.close();
+                    socket.close();
+                }
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

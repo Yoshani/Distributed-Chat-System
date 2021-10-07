@@ -15,26 +15,27 @@ public class Server extends Thread {
 
     private String serverID;   //server id which is given when starting the server
     private ArrayList<Server> threadList;
+    private ArrayList<Socket> connectionList;
     private Socket connected;
 
-    private PrintWriter output;
     private DataOutputStream out;
     private ServerSocket Server;
-    private static HashMap<String, Integer> clientList = new HashMap<String, Integer>(); //client list
-    private static HashMap<Integer, String> reverseClientList = new HashMap<Integer, String>(); //client list
-    private static HashMap<String, String> globalRoomList = new HashMap<String, String>(); //global rooms with their owners
+    private static HashMap<String, Integer> clientList = new HashMap<>(); //client list
+    private static HashMap<Integer, String> reverseClientList = new HashMap<>(); //client list
+    private static HashMap<String, String> globalRoomList = new HashMap<>(); //global rooms with their owners
 
-    private static HashMap<String, clientState> clientObjectList = new HashMap<String, clientState>();  //maintain room object list  clientID:clientObject
-    private static HashMap<String, Room> roomObjectList = new HashMap<String, Room>();  //maintain room object list roomID:roomObject
+    private static HashMap<String, clientState> clientObjectList = new HashMap<>();  //maintain room object list  clientID:clientObject
+    private static HashMap<String, Room> roomObjectList = new HashMap<>();  //maintain room object list roomID:roomObject
     private Room mainhall;
 
-    public Server(String id, Socket socket, ArrayList<Server> threads) {
+    public Server(String id, Socket socket, ArrayList<Server> threads, ArrayList<Socket> connections) {
         this.serverID = id;
         mainhall = new Room("default-" + serverID, "MainHall-" + serverID);
         roomObjectList.put("MainHall-" + serverID, mainhall);
         globalRoomList.put("MainHall-" + serverID, "default-" + serverID);
         this.connected = socket;
         this.threadList = threads;
+        this.connectionList = connections;
     }
 
     //check the existence of a key in json object
@@ -47,6 +48,16 @@ public class Server extends Thread {
         return (Character.toString(id.charAt(0)).matches("[a-zA-Z]+") && id.matches("[a-zA-Z0-9]+") && id.length() >= 3 && id.length() <= 16);
     }
 
+    private void sendBroadcast(JSONObject obj, ArrayList<Socket> socketList) throws IOException {
+        for (Socket each : socketList) {
+            Socket TEMP_SOCK = (Socket) each;
+            PrintWriter TEMP_OUT = new PrintWriter(TEMP_SOCK.getOutputStream());
+            TEMP_OUT.println(obj);
+            TEMP_OUT.flush();
+            System.out.println("Sent to: " + TEMP_SOCK.getLocalAddress().getHostName() + TEMP_SOCK.getPort());    //displayed in the console
+        }
+    }
+
     //send message to client
     private void send(JSONObject obj) throws IOException {
         out.write((obj.toJSONString() + "\n").getBytes("UTF-8"));
@@ -54,7 +65,7 @@ public class Server extends Thread {
     }
 
     //format message before sending it to client
-    private void messageSend(Socket socket, String msg, List<String> msgList) throws IOException {
+    private void messageSend(ArrayList<Socket> socketList, String msg, List<String> msgList) throws IOException {
         JSONObject sendToClient = new JSONObject();
         String[] array = msg.split(" ");
         if (array[0].equals("newid")) {
@@ -69,9 +80,9 @@ public class Server extends Thread {
             sendToClient = ServerMessage.getCreateRoom(array[1], array[2]);
             send(sendToClient);
         }
-        if (array[0].equals("createroomchange")) {
-            sendToClient = ServerMessage.getCreateRoomChange(array[1], array[2], array[3]);
-            send(sendToClient);
+        if (array[0].equals("roomchangeAll")) {
+            sendToClient = ServerMessage.getRoomChange(array[1], array[2], array[3]);
+            sendBroadcast(sendToClient, socketList);
         }
         if (array[0].equals("roomcontents")) {
             sendToClient = ServerMessage.getWho(array[1], msgList, array[2]);
@@ -81,6 +92,10 @@ public class Server extends Thread {
             sendToClient = ServerMessage.getList(msgList);
             send(sendToClient);
         }
+        if (array[0].equals("joinroomchange")) {
+            sendToClient = ServerMessage.getRoomChange(array[1], array[2], array[3]);
+            send(sendToClient);
+        }
     }
 
     //new identity
@@ -88,20 +103,23 @@ public class Server extends Thread {
         if (checkID(id) && !clientObjectList.containsKey(id)) {
             System.out.println("Recieved correct ID ::" + fromclient);
 
-            clientState client = new clientState(id, mainhall.getRoomId(), connected.getPort());
+            clientState client = new clientState(id, mainhall.getRoomId(), connected.getPort(), connected);
+
             mainhall.addParticipants(client);
+            mainhall.addSocket(connected);
+
             clientObjectList.put(id, client);
 
             clientList.put(id, connected.getPort());
             reverseClientList.put(connected.getPort(), id);
 
-            synchronized (connected) {
-                messageSend(connected, "newid true", null);
-                messageSend(connected, "roomchange " + id + " MainHall-" + serverID, null);
+            synchronized (connectionList) {
+                messageSend(connectionList, "newid true", null);
+                messageSend(connectionList, "roomchange " + id + " MainHall-" + serverID, null);
             }
         } else {
             System.out.println("Recieved wrong ID type or ID already in use");
-            messageSend(connected, "newid false", null);
+            messageSend(connectionList, "newid false", null);
         }
     }
 
@@ -112,23 +130,34 @@ public class Server extends Thread {
             System.out.println("Recieved correct room ID ::" + fromclient);
 
             clientState client = clientObjectList.get(id);
+
             String former = client.getRoomID();
+            ArrayList<Socket> formerSocket = new ArrayList<>();
+            for (String each:clientObjectList.keySet()){
+                if (clientObjectList.get(each).getRoomID().equals(former)){
+                    formerSocket.add(clientObjectList.get(each).getSocket());
+                }
+            }
+
             roomObjectList.get(former).removeParticipants(client);
+            roomObjectList.get(former).removeSocket(connected);
 
             Room newRoom = new Room(id, roomID);
             roomObjectList.put(roomID, newRoom);
             globalRoomList.put(roomID, id);
 
             client.setRoomID(roomID);
-            newRoom.addParticipants(client);
 
-            synchronized (connected) {
-                messageSend(connected, "createroom " + roomID + " true", null);
-                messageSend(connected, "createroomchange " + id + " " + former + " " + roomID, null);
+            newRoom.addParticipants(client);
+            newRoom.addSocket(connected);
+
+            synchronized (connectionList) {
+                messageSend(connectionList, "createroom " + roomID + " true", null);
+                messageSend(formerSocket, "roomchangeAll " + id + " " + former + " " + roomID, null);
             }
         } else {
             System.out.println("Recieved wrong room ID type or room ID already in use");
-            messageSend(connected, "createroom " + roomID + " false", null);
+            messageSend(connectionList, "createroom " + roomID + " false", null);
         }
     }
 
@@ -138,28 +167,59 @@ public class Server extends Thread {
         clientState client = clientObjectList.get(id);
         String roomID = client.getRoomID();
         Room room = roomObjectList.get(roomID);
-        List<clientState> clients = room.getParticipants();
 
-        List<String> participants = new ArrayList<String>();
+        List<String> participants = new ArrayList<>();
         System.out.println("room contains :");
-        for (int i = 0; i < clients.size(); i++) {
-            participants.add(clients.get(i).getId());
-            System.out.println(clients.get(i).getId());
+        for (String each:clientObjectList.keySet()){
+            if (clientObjectList.get(each).getRoomID().equals(roomID)){
+                participants.add(each);
+            }
         }
         String owner = room.getOwnerIdentity();
-        messageSend(connected, "roomcontents " + roomID + " " + owner, participants);
+        messageSend(connectionList, "roomcontents " + roomID + " " + owner, participants);
     }
 
     //list
     private void list(Socket connected, String fromclient) throws IOException {
         List<String> rooms = new ArrayList<>();
         System.out.println("rooms in the system :");
-        for(String r:roomObjectList.keySet()){
+        for (String r : roomObjectList.keySet()) {
             rooms.add(r);
             System.out.println(r);
         }
 
-        messageSend(connected, "roomlist ", rooms);
+        messageSend(connectionList, "roomlist ", rooms);
+    }
+
+    //joinroom
+    private void joinroom(String roomid, Socket connected, String fromclient) throws IOException {
+        String id = reverseClientList.get(connected.getPort());
+        clientState client = clientObjectList.get(id);
+        Room room = roomObjectList.get(client.getRoomID());
+        String former = client.getRoomID();
+
+        if (roomObjectList.containsKey(roomid) && !room.getOwnerIdentity().equals(id)) {
+            System.out.println("Recieved correct join room message :" + fromclient);
+            //-------------have to change when there are multiple servers---------------------
+            ArrayList<Socket> roomList = new ArrayList<>();
+            for (String each:clientObjectList.keySet()){
+                if (clientObjectList.get(each).getRoomID().equals(former) || clientObjectList.get(each).getRoomID().equals(roomid)){
+                    roomList.add(clientObjectList.get(each).getSocket());
+                }
+            }
+            roomObjectList.get(former).removeParticipants(client);
+            roomObjectList.get(former).removeSocket(connected);
+
+            client.setRoomID(roomid);
+
+            roomObjectList.get(roomid).addParticipants(client);
+            roomObjectList.get(roomid).addSocket(connected);
+
+            messageSend(roomList, "roomchangeAll " + id + " " + former + " " + roomid, null);
+
+        } else {
+            messageSend(connectionList, "joinroomchange " + id + " " + former + " " + roomid, null);
+        }
     }
 
     @Override
@@ -178,7 +238,7 @@ public class Server extends Thread {
 
                 String fromclient = inFromClient.readLine();
 
-                if(fromclient.equalsIgnoreCase("exit")){
+                if (fromclient.equalsIgnoreCase("exit")) {
                     break;
                 }
 
@@ -204,6 +264,10 @@ public class Server extends Thread {
                         } //check list
                         if (j_object.get("type").equals("list")) {
                             list(connected, fromclient);
+                        } //check joinroom
+                        if (j_object.get("type").equals("joinroom") && j_object.get("roomid") != null) {
+                            String roomID = j_object.get("roomid").toString();
+                            joinroom(roomID, connected, fromclient);
                         }
                     } else {
                         System.out.println("Something went wrong");
@@ -220,9 +284,4 @@ public class Server extends Thread {
 
     }
 
-    private void printToAllClients(String fromclient){
-        for(Server thread:threadList){
-            thread.output.println(fromclient);
-        }
-    }
 }

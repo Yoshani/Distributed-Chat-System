@@ -15,6 +15,7 @@ public class Main
 
         String serverid = serverID.nextLine();  // Read user input
 
+        ArrayList<Socket> ConnectionArray = new ArrayList<Socket>();
         ArrayList<Server> threadList = new ArrayList<>();
         try{
             ServerSocket serverSocket = new ServerSocket(5000);
@@ -24,7 +25,8 @@ public class Main
             System.out.println("TCPServer Waiting for client on port 5000"); //client should use 5000 as port
             while(true){
                 Socket socket = serverSocket.accept();
-                Server serverThread = new Server(serverid,socket,threadList);
+                ConnectionArray.add(socket);
+                Server serverThread = new Server(serverid,socket,threadList,ConnectionArray);
                 //starting the tread
                 threadList.add(serverThread);
                 serverThread.start();

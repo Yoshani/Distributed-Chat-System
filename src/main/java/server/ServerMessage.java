@@ -33,7 +33,7 @@ public class ServerMessage {
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getCreateRoomChange(String id, String former, String roomID) {
+    public static JSONObject getRoomChange(String id, String former, String roomID) {
         JSONObject join = new JSONObject();
         join.put("type", "roomchange");
         join.put("identity", id);

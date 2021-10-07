@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 
 public class Server extends Thread {
 
@@ -95,6 +96,10 @@ public class Server extends Thread {
         if (array[0].equals("joinroomchange")) {
             sendToClient = ServerMessage.getRoomChange(array[1], array[2], array[3]);
             send(sendToClient);
+        }
+        if (array[0].equals("message")) {
+            sendToClient = ServerMessage.getMessage(array[1], String.join(" ",Arrays.copyOfRange(array, 2, array.length)));
+            sendBroadcast(sendToClient, socketList);
         }
     }
 
@@ -222,6 +227,22 @@ public class Server extends Thread {
         }
     }
 
+    //message
+    private void message(String content, Socket connected, String fromclient) throws IOException {
+        String id = reverseClientList.get(connected.getPort());
+        clientState client = clientObjectList.get(id);
+        String roomid = client.getRoomID();
+
+        ArrayList<Socket> roomList = new ArrayList<>();
+        for (String each:clientObjectList.keySet()){
+            if (clientObjectList.get(each).getRoomID().equals(roomid) && !clientObjectList.get(each).getId().equals(id)){
+                roomList.add(clientObjectList.get(each).getSocket());
+            }
+        }
+
+        messageSend(roomList, "message "+ id + " " + content, null);
+    }
+
     @Override
     public void run() {
         try {
@@ -268,6 +289,10 @@ public class Server extends Thread {
                         if (j_object.get("type").equals("joinroom") && j_object.get("roomid") != null) {
                             String roomID = j_object.get("roomid").toString();
                             joinroom(roomID, connected, fromclient);
+                        } //check message
+                        if (j_object.get("type").equals("message")) {
+                            String content = j_object.get("content").toString();
+                            message(content, connected, fromclient);
                         }
                     } else {
                         System.out.println("Something went wrong");

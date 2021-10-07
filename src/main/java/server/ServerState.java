@@ -7,9 +7,14 @@ import java.util.*;
 public class ServerState {
 
     private String serverID;
+    private int selfID;
     private String serverAddress = null;
     private int coordinationPort;
     private int clientsPort;
+    private int leaderID;
+    private int numberOfServersWithHigherIds;
+
+    private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
     private Room mainHall;
     private final ArrayList<ClientHandlerThread> clientHandlerThreadList = new ArrayList<>();
@@ -34,7 +39,6 @@ public class ServerState {
     }
 
     public void initializeWithConfigs(String serverID, String serverConfPath) {
-
         this.serverID = serverID;
         try {
             File conf = new File( serverConfPath ); // read configuration
@@ -46,7 +50,14 @@ public class ServerState {
                     this.serverAddress = params[1];
                     this.clientsPort = Integer.parseInt(params[2]);
                     this.coordinationPort = Integer.parseInt(params[3]);
+                    this.selfID = Integer.parseInt( params[0].substring( 1,2 ) );
                 }
+                // add all servers to hash map
+                Server s = new Server( Integer.parseInt( params[0].substring( 1,2 ) ),
+                        Integer.parseInt(params[3]),
+                        Integer.parseInt(params[2]),
+                        params[1]);
+                servers.put( s.getServerID(), s );
             }
             myReader.close();
 
@@ -54,6 +65,8 @@ public class ServerState {
             System.out.println("Configs file not found");
             e.printStackTrace();
         }
+        // set number of servers with higher ids
+        numberOfServersWithHigherIds = servers.size() - selfID;
 
         this.mainHall = new Room("default-" + serverID, "MainHall-" + serverID);
         this.roomMap.put("MainHall-" + serverID, mainHall);
@@ -88,6 +101,31 @@ public class ServerState {
     public int getCoordinationPort()
     {
         return coordinationPort;
+    }
+
+    public int getSelfID()
+    {
+        return selfID;
+    }
+
+    public int getLeaderID()
+    {
+        return leaderID;
+    }
+
+    public void setLeaderID( int leaderID )
+    {
+        this.leaderID = leaderID;
+    }
+
+    public int getNumberOfServersWithHigherIds()
+    {
+        return numberOfServersWithHigherIds;
+    }
+
+    public HashMap<Integer,Server> getServers()
+    {
+        return servers;
     }
 
     public Room getMainHall() {

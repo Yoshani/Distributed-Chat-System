@@ -44,7 +44,6 @@ public class ClientHandlerThread extends Thread {
             PrintWriter TEMP_OUT = new PrintWriter(TEMP_SOCK.getOutputStream());
             TEMP_OUT.println(obj);
             TEMP_OUT.flush();
-            System.out.println("Sent to: " + TEMP_SOCK.getLocalAddress().getHostName() + TEMP_SOCK.getPort());    //displayed in the console
         }
     }
     //send message to client
@@ -201,30 +200,27 @@ public class ClientHandlerThread extends Thread {
 
                 String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
+                HashMap<String,ClientState> formerClientList = ServerState.getInstance().getRoomMap().get(roomID).getClientStateMap();
+                HashMap<String,ClientState> mainHallClientList = ServerState.getInstance().getRoomMap().get(mainHallRoomID).getClientStateMap();
+                mainHallClientList.putAll(formerClientList);
 
-                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
-
-                //TODO : move all members to mainhall and show for ones already in mainhall
-//                room.getClientStateMap().entrySet().forEach(entry -> {
-//                    String s = entry.getKey();
-//                    ClientState clientStateInRoom = entry.getValue();
-//                    ServerState.getInstance().getClientHandlerThreadList().forEach(clientHandlerThread -> {
-//                        if (clientHandlerThread.clientState.getClientID().equals(clientStateInRoom.getClientID())) {
-//                            try {
-//                                clientHandlerThread.joinRoom(mainHallRoomID, clientHandlerThread.clientSocket, "");
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    });
-//                });
+                ArrayList<Socket> socketList = new ArrayList<>();
+                for (String each:mainHallClientList.keySet()){
+                    socketList.add(mainHallClientList.get(each).getSocket());
+                }
 
                 clientState.setRoomID(mainHallRoomID);
                 ServerState.getInstance().getRoomMap().remove(roomID);
                 ServerState.getInstance().getRoomMap().get(mainHallRoomID).addParticipants(clientState);
 
+                for(String client:formerClientList.keySet()){
+                    String id = formerClientList.get(client).getClientID();
+                    messageSend(socketList, "roomchangeall " + id + " " + roomID + " " + mainHallRoomID, null);
+                }
+
                 messageSend(null, "deleteroom " + roomID + " true", null);
-                messageSend(null, "roomchange " + clientState.getClientID() + " " + roomID + " " + mainHallRoomID, null);
+
+                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
 
             } else {
                 messageSend(null, "deleteroom " + roomID + " false", null);

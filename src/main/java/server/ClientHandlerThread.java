@@ -68,7 +68,7 @@ public class ClientHandlerThread extends Thread {
             send(sendToClient);
         } else if (array[0].equals("createroomchange")) {
             sendToClient = ServerMessage.getCreateRoomChange(array[1], array[2], array[3]);
-            send(sendToClient);
+            sendBroadcast(sendToClient, socketList);
         } else if (array[0].equals("roomcontents")) {
             sendToClient = ServerMessage.getWho(array[1], msgList, array[2]);
             send(sendToClient);
@@ -129,6 +129,17 @@ public class ClientHandlerThread extends Thread {
             System.out.println("INFO : Received correct room ID ::" + jsonStringFromClient);
 
             String formerRoomID = clientState.getRoomID();
+
+            String former = clientState.getRoomID();
+            HashMap<String, ClientState> clientList = ServerState.getInstance().getRoomMap().get(former).getClientStateMap();
+
+            ArrayList<Socket> formerSocket = new ArrayList<>();
+            for (String each:clientList.keySet()){
+                if (clientList.get(each).getRoomID().equals(former)){
+                    formerSocket.add(clientList.get(each).getSocket());
+                }
+            }
+
             ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
 
             Room newRoom = new Room(clientState.getClientID(), newRoomID);
@@ -139,7 +150,7 @@ public class ClientHandlerThread extends Thread {
 
             synchronized (connected) { //TODO : check sync | lock on out buffer?
                 messageSend(null, "createroom " + newRoomID + " true", null);
-                messageSend(null, "createroomchange " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null);
+                messageSend(formerSocket, "createroomchange " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null);
             }
         } else {
             System.out.println("WARN : Recieved wrong room ID type or room ID already in use");

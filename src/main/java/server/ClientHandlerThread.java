@@ -242,7 +242,6 @@ public class ClientHandlerThread extends Thread {
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
         if (ServerState.getInstance().getRoomMap().containsKey(roomID)) {
-            //TODO : check sync
             Room room = ServerState.getInstance().getRoomMap().get(roomID);
             if (room.getOwnerIdentity().equals(clientState.getClientID())) {
 
@@ -277,9 +276,6 @@ public class ClientHandlerThread extends Thread {
                 messageSend(null, "deleteroom " + " " + " true", null);
                 System.out.println("INFO : "+ clientState.getClientID()+ " is quit");
             }
-
-            //TODO : check global, room change all members
-            // } else if(inAnotherServer){
         } else {
             System.out.println("WARN : Received room ID [" + roomID + "] does not exist");
             messageSend(null, "deleteroom " + roomID + " false", null);

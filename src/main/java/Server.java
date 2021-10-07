@@ -1,111 +1,63 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
-public class Server {
+public final class Server {
 
-    private ServerSocket server;
+    private static Server server;
+    public String serverid;
+    public String server_conf_path;
+    private String server_address;
+    private int coordination_port;
+    private int clients_port;
 
-    public Server() throws Exception {
-//        if (ipAddress != null && !ipAddress.isEmpty())
-//            this.server = new ServerSocket(4444, 1, InetAddress.getByName(ipAddress));
-//        else
-        this.server = new ServerSocket(4444, 1, InetAddress.getLocalHost());
+    private Server(String serverid, String server_conf_path) {
+        this.serverid = serverid;
+        this.server_conf_path = server_conf_path;
+
+        setConf();
     }
 
-    private void listen() throws Exception {
-        String data = null;
-        Socket client = this.server.accept();
-        String clientAddress = client.getInetAddress().getHostAddress();
-        System.out.println("\r\nNew connection from " + clientAddress);
-
-        // create a new thread object
-        ClientHandler clientSock = new ClientHandler(client);
-
-        // This thread will handle the client separately
-        new Thread(clientSock).start();
-
-    }
-    public InetAddress getSocketAddress() {
-        return this.server.getInetAddress();
-    }
-
-    public int getPort() {
-        return this.server.getLocalPort();
-    }
-
-    public static void main(String[] args) throws Exception {
-        Server app = new Server();
-        System.out.println("\r\nRunning Server: " +
-                                   "Host=" + app.getSocketAddress().getHostAddress() +
-                                   " Port=" + app.getPort());
-
-        app.listen();
-    }
-
-    // ClientHandler class
-    private static class ClientHandler implements Runnable {
-        private final Socket clientSocket;
-
-        // Constructor
-        public ClientHandler(Socket socket)
-        {
-            this.clientSocket = socket;
+    public static Server getInstance(String serverid, String server_conf_path) {
+        if (server == null) {
+            server = new Server(serverid, server_conf_path);
         }
+        return server;
+    }
 
-        public void run()
-        {
-//
-//        BufferedReader in = new BufferedReader(
-//                new InputStreamReader(client.getInputStream()));
-//        while ( (data = in.readLine()) != null ) {
-//            System.out.println("\r\nMessage from " + clientAddress + ": " + data);
-//        }
-            PrintWriter out = null;
-            BufferedReader in = null;
-            try {
-
-                // get the outputstream of client
-                out = new PrintWriter(
-                        clientSocket.getOutputStream(), true);
-
-                // get the inputstream of client
-                in = new BufferedReader(
-                        new InputStreamReader(
-                                clientSocket.getInputStream()));
-
-                String line;
-                while ((line = in.readLine()) != null) {
-
-                    // writing the received message from client
-                    System.out.println("\r\nMessage from " + clientSocket.getInetAddress().getHostAddress() + ": " + line);
-                    System.out.printf(
-                            " Sent from the client: %s\n",
-                            line);
-                    out.println(line);
+    public void setConf() {
+        try {
+            File conf = new File( server_conf_path );
+            Scanner myReader = new Scanner(conf);
+            while (myReader.hasNextLine()) {
+                String data = myReader.nextLine();
+                String[] args = data.split( " " );
+                System.out.println(data);
+                if( args[0].equals( serverid ) ) {
+                    server_address = args[1];
+                    clients_port = Integer.parseInt(args[2]);
+                    coordination_port = Integer.parseInt(args[3]);
                 }
             }
-            catch ( IOException e) {
-                e.printStackTrace();
-            }
-            finally {
-                try {
-                    if (out != null) {
-                        out.close();
-                    }
-                    if (in != null) {
-                        in.close();
-                        clientSocket.close();
-                    }
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            myReader.close();
+        } catch ( FileNotFoundException e) {
+            System.out.println("File not found");
+            e.printStackTrace();
         }
+    }
+
+    public String getServer_address()
+    {
+        return server_address;
+    }
+
+    public int getCoordination_port()
+    {
+        return coordination_port;
+    }
+
+    public int getClients_port()
+    {
+        return clients_port;
     }
 }

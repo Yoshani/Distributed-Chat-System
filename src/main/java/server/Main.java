@@ -14,6 +14,7 @@ public class Main {
 
         ServerState.getInstance().initializeWithConfigs(args[0], args[1]);
         try {
+            // throw exception if invalid server id provided
             if( ServerState.getInstance().getServerAddress() == null ) {
                 throw new IllegalArgumentException();
             }
@@ -49,10 +50,13 @@ public class Main {
                 ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);
                 clientHandlerThread.start();
             }
-
         }
         catch( IllegalArgumentException e ) {
-            System.out.println("Invalid server ID");
+            System.out.println("ERROR : invalid server ID");
+        }
+        catch ( IndexOutOfBoundsException e) {
+            System.out.println("ERROR : server arguments not provided ");
+            e.printStackTrace();
         }
         catch ( IOException e) {
             System.out.println("ERROR : occurred in main " + Arrays.toString(e.getStackTrace()));

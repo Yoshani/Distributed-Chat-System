@@ -23,7 +23,7 @@ public class Main {
             );
             serverCoordinationSocket.bind(endPointCoordination);
             System.out.println(serverCoordinationSocket.getLocalSocketAddress());
-            System.out.println("LOG  : TCP Server Waiting for coordination on port "+
+            System.out.println("LOG  : TCP Server waiting for coordination on port "+
                                        serverCoordinationSocket.getLocalPort()); // port open for coordination
 
             // server socket for clients
@@ -36,12 +36,12 @@ public class Main {
             );
             serverClientsSocket.bind(endPointClient);
             System.out.println(serverClientsSocket.getLocalSocketAddress());
-            System.out.println("LOG  : TCP Server Waiting for clients on port "+
+            System.out.println("LOG  : TCP Server waiting for clients on port "+
                                        serverClientsSocket.getLocalPort()); // port open for clients
             while (true) {
                 Socket clientSocket = serverClientsSocket.accept();
                 ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
-                //starting the tread
+                // starting the thread
                 ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);
                 clientHandlerThread.start();
             }

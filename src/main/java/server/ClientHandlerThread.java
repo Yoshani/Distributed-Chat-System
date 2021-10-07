@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ClientHandlerThread extends Thread {
 
@@ -145,6 +146,8 @@ public class ClientHandlerThread extends Thread {
 
             System.out.println("INFO : client [" + clientState.getClientID() + "] joined room :" + roomID);
             messageSend(connected, "roomchange " + clientState.getClientID() + " " + formerRoomId + " " + roomID, null);
+            //TODO : show for ones already in room
+
             //TODO : check global, route and server change
             // } else if(inAnotherServer){
         } else {
@@ -164,14 +167,31 @@ public class ClientHandlerThread extends Thread {
 
                 String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
+
+                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
+
+                //TODO : move all members to mainhall and show for ones already in mainhall
+//                room.getClientStateMap().entrySet().forEach(entry -> {
+//                    String s = entry.getKey();
+//                    ClientState clientStateInRoom = entry.getValue();
+//                    ServerState.getInstance().getClientHandlerThreadList().forEach(clientHandlerThread -> {
+//                        if (clientHandlerThread.clientState.getClientID().equals(clientStateInRoom.getClientID())) {
+//                            try {
+//                                clientHandlerThread.joinRoom(mainHallRoomID, clientHandlerThread.clientSocket, "");
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    });
+//                });
+
                 clientState.setRoomID(mainHallRoomID);
                 ServerState.getInstance().getRoomMap().remove(roomID);
                 ServerState.getInstance().getRoomMap().get(mainHallRoomID).addParticipants(clientState);
 
-                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
                 messageSend(connected, "deleteroom " + roomID + " true", null);
                 messageSend(connected, "roomchange " + clientState.getClientID() + " " + roomID + " " + mainHallRoomID, null);
-                //todo : move all members to mainhall
+
             } else {
                 messageSend(connected, "deleteroom " + roomID + " false", null);
                 System.out.println("WARN : Requesting client [" + clientState.getClientID() + "] does not own the room ID [" + roomID + "]");

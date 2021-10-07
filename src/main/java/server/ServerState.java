@@ -64,4 +64,8 @@ public class ServerState {
     public HashMap<String, Room> getRoomMap() {
         return roomMap;
     }
+
+    public ArrayList<ClientHandlerThread> getClientHandlerThreadList() {
+        return clientHandlerThreadList;
+    }
 }

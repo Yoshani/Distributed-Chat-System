@@ -1,5 +1,6 @@
 package server;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,6 +14,9 @@ public class Main {
 
         ServerState.getInstance().initializeWithConfigs(args[0], args[1]);
         try {
+            if( ServerState.getInstance().getServerAddress() == null ) {
+                throw new IllegalArgumentException();
+            }
             // server socket for coordination
             ServerSocket serverCoordinationSocket = new ServerSocket();
 
@@ -46,7 +50,11 @@ public class Main {
                 clientHandlerThread.start();
             }
 
-        } catch (Exception e) {
+        }
+        catch( IllegalArgumentException e ) {
+            System.out.println("Invalid server ID");
+        }
+        catch ( IOException e) {
             System.out.println("ERROR : occurred in main " + Arrays.toString(e.getStackTrace()));
         }
     }

@@ -7,7 +7,7 @@ import java.util.*;
 public class ServerState {
 
     private String serverID;
-    private String serverAddress;
+    private String serverAddress = null;
     private int coordinationPort;
     private int clientsPort;
 
@@ -47,14 +47,12 @@ public class ServerState {
                     this.clientsPort = Integer.parseInt(params[2]);
                     this.coordinationPort = Integer.parseInt(params[3]);
                 }
-                else throw new RuntimeException();
             }
             myReader.close();
+
         } catch ( FileNotFoundException e) {
             System.out.println("Configs file not found");
             e.printStackTrace();
-        } catch( RuntimeException e ) {
-            System.out.println("Invalid server ID");
         }
 
         this.mainHall = new Room("default-" + serverID, "MainHall-" + serverID);

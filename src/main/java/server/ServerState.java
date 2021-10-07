@@ -7,7 +7,7 @@ import java.util.*;
 public class ServerState {
 
     private String serverID;
-    private String serverAddress;
+    private String serverAddress = null;
     private int coordinationPort;
     private int clientsPort;
 
@@ -49,6 +49,7 @@ public class ServerState {
                 }
             }
             myReader.close();
+
         } catch ( FileNotFoundException e) {
             System.out.println("Configs file not found");
             e.printStackTrace();

@@ -74,4 +74,13 @@ public class ServerMessage {
         jsonObject.put("approved", isApproved);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getMessage(String id, String content) {
+        JSONObject join = new JSONObject();
+        join.put("type", "message");
+        join.put("identity",id);
+        join.put("content",content);
+        return join;
+    }
 }

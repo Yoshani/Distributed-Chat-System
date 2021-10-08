@@ -1,5 +1,7 @@
 package server;
 
+import client.ClientHandlerThread;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
@@ -11,15 +13,16 @@ public class ServerState {
     private String serverAddress = null;
     private int coordinationPort;
     private int clientsPort;
-    private int leaderID;
     private int numberOfServersWithHigherIds;
 
     private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
     private Room mainHall;
-    private final ArrayList<ClientHandlerThread> clientHandlerThreadList = new ArrayList<>();
 
-    private final HashMap<String, Room> roomMap = new HashMap<>();  //maintain room object list <roomID,roomObject>
+    // maintain client handler thread map <threadID, thread>
+    private final HashMap<Long, ClientHandlerThread> clientHandlerThreadMap = new HashMap<>();
+
+    private final HashMap<String, Room> roomMap = new HashMap<>();  // maintain room object list <roomID,roomObject>
 
     //singleton
     private static ServerState serverStateInstance;
@@ -73,8 +76,12 @@ public class ServerState {
 
     }
 
-    public void addClientHandlerThreadToList(ClientHandlerThread clientHandlerThread) {
-        clientHandlerThreadList.add(clientHandlerThread);
+    public void addClientHandlerThreadToMap(ClientHandlerThread clientHandlerThread) {
+        clientHandlerThreadMap.put( clientHandlerThread.getId(), clientHandlerThread );
+    }
+
+    public ClientHandlerThread getClientHandlerThread(Long threadID) {
+        return clientHandlerThreadMap.get( threadID );
     }
 
     public boolean isClientIDAlreadyTaken(String clientID){
@@ -108,16 +115,6 @@ public class ServerState {
         return selfID;
     }
 
-    public int getLeaderID()
-    {
-        return leaderID;
-    }
-
-    public void setLeaderID( int leaderID )
-    {
-        this.leaderID = leaderID;
-    }
-
     public int getNumberOfServersWithHigherIds()
     {
         return numberOfServersWithHigherIds;
@@ -134,9 +131,5 @@ public class ServerState {
 
     public HashMap<String, Room> getRoomMap() {
         return roomMap;
-    }
-
-    public ArrayList<ClientHandlerThread> getClientHandlerThreadList() {
-        return clientHandlerThreadList;
     }
 }

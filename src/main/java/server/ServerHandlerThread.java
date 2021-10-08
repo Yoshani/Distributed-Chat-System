@@ -68,7 +68,7 @@ public class ServerHandlerThread extends Thread {
                             e.printStackTrace();
                         }
                     } else if ( j_object.get("type").equals("clientidapprovalreply")
-                                  && j_object.get("approved") != null){
+                                  && j_object.get("approved") != null && j_object.get( "threadid" ) != null){
 
                         // process client ID approval request reply received by non leader
                         int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;

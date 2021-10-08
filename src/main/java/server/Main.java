@@ -67,9 +67,6 @@ public class Main {
              **/
             BullyAlgorithm.initialize();
 
-//            Runnable receiver = new BullyAlgorithm("Receiver");
-//            new Thread(receiver).start();
-
             Runnable heartbeat = new BullyAlgorithm("Heartbeat");
             new Thread(heartbeat).start();
 
@@ -82,7 +79,6 @@ public class Main {
                 clientHandlerThread.setThreadID( clientHandlerThread.getId() );
                 // starting the thread
                 ServerState.getInstance().addClientHandlerThreadToMap( clientHandlerThread );
-                ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);  // TODO: remove
                 clientHandlerThread.start();
             }
         }

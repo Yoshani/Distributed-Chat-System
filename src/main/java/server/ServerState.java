@@ -19,13 +19,10 @@ public class ServerState {
 
     private Room mainHall;
 
-    // TODO: remove
-    private final ArrayList<ClientHandlerThread> clientHandlerThreadList = new ArrayList<>();
-
-    // maintain client handler thread list <threadID, thread>
+    // maintain client handler thread map <threadID, thread>
     private final HashMap<Long, ClientHandlerThread> clientHandlerThreadMap = new HashMap<>();
 
-    private final HashMap<String, Room> roomMap = new HashMap<>();  //maintain room object list <roomID,roomObject>
+    private final HashMap<String, Room> roomMap = new HashMap<>();  // maintain room object list <roomID,roomObject>
 
     //singleton
     private static ServerState serverStateInstance;
@@ -77,11 +74,6 @@ public class ServerState {
         this.mainHall = new Room("default-" + serverID, "MainHall-" + serverID);
         this.roomMap.put("MainHall-" + serverID, mainHall);
 
-    }
-
-    // TODO: remove
-    public void addClientHandlerThreadToList(ClientHandlerThread clientHandlerThread) {
-        clientHandlerThreadList.add(clientHandlerThread);
     }
 
     public void addClientHandlerThreadToMap(ClientHandlerThread clientHandlerThread) {

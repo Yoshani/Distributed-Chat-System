@@ -41,10 +41,12 @@ public class ServerHandlerThread extends Thread {
                     BullyAlgorithm.receiveMessages( j_object );
                 }
                 else if (MessageTransfer.hasKey( j_object, "type" )) {
-                    if (j_object.get("type").equals("clientidapprovalrequest")
-                                && j_object.get("clientid") != null && j_object.get( "sender" ) != null) {
 
-                        // process client ID approval request received by leader
+                    if (j_object.get("type").equals("clientidapprovalrequest")
+                                && j_object.get("clientid") != null && j_object.get( "sender" ) != null
+                                && j_object.get( "threadid" ) != null) {
+
+                        // leader processes client ID approval request received
                         String clientID = j_object.get("clientid").toString();
                         int sender = Integer.parseInt(j_object.get("sender").toString());
                         String threadID = j_object.get("threadid").toString();
@@ -67,16 +69,55 @@ public class ServerHandlerThread extends Thread {
                         catch(Exception e) {
                             e.printStackTrace();
                         }
+
                     } else if ( j_object.get("type").equals("clientidapprovalreply")
                                   && j_object.get("approved") != null && j_object.get( "threadid" ) != null){
 
-                        // process client ID approval request reply received by non leader
+                        // non leader processes client ID approval request reply received
                         int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;
                         Long threadID = Long.parseLong( j_object.get("threadid").toString() );
 
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
                                                                              .getClientHandlerThread( threadID );
-                        clientHandlerThread.setApproved( approved );
+                        clientHandlerThread.setApprovedClientID( approved );
+
+                    } else if ( j_object.get("type").equals("roomcreateapprovalrequest") ) {
+
+                        // leader processes room create approval request received
+                        String clientID = j_object.get("clientid").toString();
+                        String roomID = j_object.get("roomid").toString();
+                        int sender = Integer.parseInt(j_object.get("sender").toString());
+                        String threadID = j_object.get("threadid").toString();
+
+                        boolean approved = LeaderState.getInstance().isRoomCreationApproved(clientID, roomID);
+
+                        if( approved ) {
+                            LeaderState.getInstance().addApprovedRoom( clientID, roomID, sender );
+                        }
+                        Server destServer = ServerState.getInstance().getServers()
+                                                       .get( sender );
+                        try {
+                            // send room create approval reply to sender
+                            MessageTransfer.send(
+                                    ServerMessage.getRoomCreateApprovalReply( String.valueOf(approved), threadID ),
+                                    destServer
+                            );
+                            System.out.println("INFO : Room '"+ roomID +
+                                               "' creation request from client " + clientID +
+                                               " is " + (approved ? "":"not") + " approved");
+                        }
+                        catch(Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else if ( j_object.get("type").equals("roomcreateapprovalreply") ) {
+
+                        // non leader processes room create approval request reply received
+                        int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;
+                        Long threadID = Long.parseLong( j_object.get("threadid").toString() );
+
+                        ClientHandlerThread clientHandlerThread = ServerState.getInstance()
+                                                                             .getClientHandlerThread( threadID );
+                        clientHandlerThread.setApprovedRoomCreation( approved );
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

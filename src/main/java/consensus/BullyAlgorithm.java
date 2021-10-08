@@ -49,10 +49,10 @@ public class BullyAlgorithm implements Runnable{
                     if( !receivedOk )
                     {
                         // OK not receivedOk. Set self as leader
-                        ServerState.getInstance().setLeaderID( ServerState.getInstance().getSelfID() );
+                        LeaderState.getInstance().setLeaderID( ServerState.getInstance().getSelfID() );
                         electionInProgress = false; // allow another election request to come in
                         leaderFlag = true;
-                        System.out.println( "INFO : Server s" + ServerState.getInstance().getLeaderID()
+                        System.out.println( "INFO : Server s" + LeaderState.getInstance().getLeaderID()
                                                     + " is selected as leader! " );
                         Runnable sender = new BullyAlgorithm( "Sender", "coordinator" );
                         new Thread( sender ).start();
@@ -64,8 +64,6 @@ public class BullyAlgorithm implements Runnable{
 
                         electionInProgress = false;
                         receivedOk = false;
-                        System.out.println( "INFO : Election in progress = " + electionInProgress +
-                                                    " Received = " + receivedOk );
 
                         Runnable sender = new BullyAlgorithm( "Sender", "election" );
                         new Thread( sender ).start();
@@ -135,13 +133,13 @@ public class BullyAlgorithm implements Runnable{
                                 }
                                 case "coordinator":
                                     // {"option": "coordinator", "leader": 1}
-                                    ServerState.getInstance().setLeaderID(
+                                    LeaderState.getInstance().setLeaderID(
                                             Integer.parseInt(j_object.get( "leader" ).toString()) );
                                     leaderFlag = true;
                                     electionInProgress = false;
                                     receivedOk = false;
                                     System.out.println( "INFO : Leader selected is s" +
-                                                                ServerState.getInstance().getLeaderID() );
+                                                                LeaderState.getInstance().getLeaderID() );
                                     break;
                                 case "heartbeat": {
                                     // {"option": "heartbeat", "sender": 1}
@@ -166,10 +164,10 @@ public class BullyAlgorithm implements Runnable{
                 while( true ) {
                     try {
                         Thread.sleep(10);
-                        if( leaderFlag && ServerState.getInstance().getSelfID() != ServerState.getInstance().getLeaderID() ) {
+                        if( leaderFlag && ServerState.getInstance().getSelfID() != LeaderState.getInstance().getLeaderID() ) {
                             Thread.sleep( 1500 );
                             Server destServer = ServerState.getInstance().getServers()
-                                                           .get( ServerState.getInstance().getLeaderID() );
+                                                           .get( LeaderState.getInstance().getLeaderID() );
 
                             MessageTransfer.send(
                                     ServerMessage.getHeartbeat( String.valueOf(ServerState.getInstance().getSelfID()) ),

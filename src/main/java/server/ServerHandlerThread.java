@@ -44,6 +44,7 @@ public class ServerHandlerThread extends Thread {
                     if (j_object.get("type").equals("clientidapprovalrequest")
                                 && j_object.get("clientid") != null && j_object.get( "sender" ) != null) {
 
+                        // process client ID approval request received by leader
                         String clientID = j_object.get("clientid").toString();
                         int sender = Integer.parseInt(j_object.get("sender").toString());
                         String threadID = j_object.get("threadid").toString();
@@ -69,6 +70,7 @@ public class ServerHandlerThread extends Thread {
                     } else if ( j_object.get("type").equals("clientidapprovalreply")
                                   && j_object.get("approved") != null){
 
+                        // process client ID approval request reply received by non leader
                         int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;
                         Long threadID = Long.parseLong( j_object.get("threadid").toString() );
 

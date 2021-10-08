@@ -107,12 +107,11 @@ public class ClientHandlerThread extends Thread {
             while(!LeaderState.getInstance().isLeaderElected()) { // TODO: any better way to do this?
                 Thread.sleep(1000);
             }
-            // if self is leader get direct approval
-            if( LeaderState.getInstance().isLeader() ) {
-                approved = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
-            } else {
-                while( approved == -1 )
-                {
+            while( approved == -1 ) {
+                // if self is leader get direct approval
+                if( LeaderState.getInstance().isLeader() ) {
+                    approved = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
+                } else {
                     try
                     {
                         // send client id approval request to leader

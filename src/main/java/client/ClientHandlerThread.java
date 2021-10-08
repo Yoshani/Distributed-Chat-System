@@ -232,7 +232,6 @@ public class ClientHandlerThread extends Thread {
                 String formerRoomID = clientState.getRoomID();
 
                 String former = clientState.getRoomID();
-                System.out.println( "former room" + former );
 
                 // list of clients inside MainHall
                 HashMap<String,ClientState> clientList = ServerState.getInstance().getRoomMap().get( former ).getClientStateMap();

@@ -109,8 +109,7 @@ public class ClientHandlerThread extends Thread {
             }
             // if self is leader get direct approval
             if( LeaderState.getInstance().isLeader() ) {
-                approved = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 1 : 0;
-
+                approved = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
             } else {
                 while( approved != -1 )
                 {
@@ -159,6 +158,7 @@ public class ClientHandlerThread extends Thread {
                 }
             }  else if( approved == 0 ) {
                 System.out.println("WARN : ID already in use");
+                // TODO: if client id is not approved throws error
                 messageSend(null, "newid false", null);
             }
         } else {

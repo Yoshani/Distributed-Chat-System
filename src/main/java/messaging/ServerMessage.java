@@ -47,10 +47,9 @@ public class ServerMessage
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getClientIdApprovalReply(String clientID, String approved, String threadID) {
+    public static JSONObject getClientIdApprovalReply(String approved, String threadID) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "clientidapprovalreply");
-        jsonObject.put("clientid", clientID);
         jsonObject.put("approved", approved);
         jsonObject.put("threadid", threadID);
         return jsonObject;

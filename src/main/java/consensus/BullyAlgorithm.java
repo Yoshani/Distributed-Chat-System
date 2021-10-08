@@ -174,7 +174,7 @@ public class BullyAlgorithm implements Runnable{
                                     ServerMessage.getHeartbeat( String.valueOf(ServerState.getInstance().getSelfID()) ),
                                     destServer
                             );
-                            System.out.println( "INFO : Sent heartbeat to leader s" + destServer.getServerID() );
+                            //System.out.println( "INFO : Sent heartbeat to leader s" + destServer.getServerID() );
                         }
                     }
 
@@ -336,7 +336,7 @@ public class BullyAlgorithm implements Runnable{
             case "heartbeat": {
                 // {"option": "heartbeat", "sender": 1}
                 int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
-                System.out.println( "INFO : Heartbeat received from s" + senderID );
+                //System.out.println( "INFO : Heartbeat received from s" + senderID );
                 break;
             }
         }

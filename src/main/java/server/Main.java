@@ -80,9 +80,9 @@ public class Main {
                 Socket clientSocket = serverClientsSocket.accept();
                 ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
                 clientHandlerThread.setThreadID( clientHandlerThread.getId() );
-                System.out.println("thread id : "+clientHandlerThread.getId());
                 // starting the thread
-                ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);
+                ServerState.getInstance().addClientHandlerThreadToMap( clientHandlerThread );
+                ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);  // TODO: remove
                 clientHandlerThread.start();
             }
         }

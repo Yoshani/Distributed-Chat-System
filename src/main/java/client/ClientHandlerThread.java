@@ -104,14 +104,14 @@ public class ClientHandlerThread extends Thread {
     {
         if (checkID(clientID)) {
             // busy wait until leader is elected
-            while(!LeaderState.getInstance().isLeaderElected()) {
+            while(!LeaderState.getInstance().isLeaderElected()) { // TODO: any better way to do this?
                 Thread.sleep(1000);
             }
             // if self is leader get direct approval
             if( LeaderState.getInstance().isLeader() ) {
                 approved = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
             } else {
-                while( approved != -1 )
+                while( approved == -1 )
                 {
                     try
                     {
@@ -158,7 +158,6 @@ public class ClientHandlerThread extends Thread {
                 }
             }  else if( approved == 0 ) {
                 System.out.println("WARN : ID already in use");
-                // TODO: if client id is not approved throws error
                 messageSend(null, "newid false", null);
             }
         } else {

@@ -48,23 +48,27 @@ public class ServerHandlerThread extends Thread {
                         int sender = Integer.parseInt(j_object.get("sender").toString());
                         String threadID = j_object.get("threadid").toString();
 
-                        String approved = String.valueOf(LeaderState.getInstance().isClientIDAlreadyTaken( clientID ));
+                        boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
+                        if( approved ) {
+                            LeaderState.getInstance().addApprovedClient( clientID, sender );
+                        }
                         Server destServer = ServerState.getInstance().getServers()
                                                        .get( sender );
                         try {
                             // send client id approval reply to sender
                             MessageTransfer.send(
-                                    ServerMessage.getClientIdApprovalReply( clientID, approved, threadID ),
+                                    ServerMessage.getClientIdApprovalReply( String.valueOf(approved), threadID ),
                                     destServer
                             );
-                            System.out.println("INFO : Client ID '"+ clientID + "' sent to leader for approval");
+                            System.out.println("INFO : Client ID '"+ clientID +
+                                                       "' from s" + sender + " is " + (approved ? "":"not") + " approved");
                         }
                         catch(Exception e) {
                             e.printStackTrace();
                         }
                     } else if ( j_object.get("type").equals("clientidapprovalreply")
-                                 && j_object.get("clientid") != null && j_object.get("approved") != null){
-                        String clientID = j_object.get("clientid").toString();
+                                  && j_object.get("approved") != null){
+
                         int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;
                         Long threadID = Long.parseLong( j_object.get("threadid").toString() );
 

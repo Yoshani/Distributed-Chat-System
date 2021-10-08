@@ -9,9 +9,8 @@ import java.util.Set;
 public class LeaderState
 {
     private int leaderID;
-    private final HashMap<String, String> pendingClients = new HashMap<>(); // <clientID, serverID>
-    private final HashMap<String, String> activeClients = new HashMap<>();
-    private final HashMap<String, String> pendingRooms = new HashMap<>();
+    private final HashMap<String, Integer> activeClients = new HashMap<>(); // <clientID, serverID>
+    private final HashMap<String, String> pendingRooms = new HashMap<>(); // clientID, roomID, serverID
     private final HashMap<String, String> activeRooms = new HashMap<>();
 
     // singleton
@@ -40,11 +39,15 @@ public class LeaderState
     }
 
     public boolean isClientIDAlreadyTaken(String clientID){
-        Set<String> allClients = new HashSet<>();
-        allClients.addAll( pendingClients.keySet() );
-        allClients.addAll( activeClients.keySet() );
+        return activeClients.containsKey( clientID );
+    }
 
-        return allClients.contains( clientID );
+    public void addApprovedClient(String clientID, int serverID) {
+        activeClients.put( clientID, serverID );
+    }
+
+    public void removeApprovedClient(String clientID) {
+        activeClients.remove( clientID );
     }
 
     public int getLeaderID()

@@ -21,8 +21,6 @@ public class BullyAlgorithm implements Runnable{
     static boolean receivedOk = false;
     static boolean leaderFlag = false;
     static boolean electionInProgress = false;
-    static int okCtr = 0;
-    static long startTimeOk = -1;
 
     public BullyAlgorithm( String operation) {
         this.operation = operation;
@@ -75,22 +73,6 @@ public class BullyAlgorithm implements Runnable{
                 }
                 catch( Exception e ) {
                     System.out.println( "INFO : Exception in timer thread" );
-                }
-                break;
-
-            case "TimerOk":
-                System.out.println( "INFO : Inside timerOK thread" );
-                while( true ) {
-                    if( ( !leaderFlag ) && System.currentTimeMillis() - startTimeOk >
-                                                   ( 5000 + 5000 * ServerState.getInstance().getNumberOfServersWithHigherIds() )
-                    )
-                    {
-                        okCtr = 0;
-                        System.out.println( "Higher Process Sent OK but Failed, so Start a new Election process" );
-                        Runnable sender = new BullyAlgorithm( "Sender", "election" );
-                        new Thread( sender ).start();
-                        break;
-                    }
                 }
                 break;
 
@@ -207,28 +189,29 @@ public class BullyAlgorithm implements Runnable{
                 }
 
             case "Sender":
-                switch( reqType )
-                {
+                switch( reqType ) {
                     case "election":
                         try {
                             sendElectionRequest();
-                        }
-                        catch( Exception e ) {
-                            System.out.println( "WARN : Servers has failed, election request cannot be processed" );
+                        } catch( Exception e ) {
+                            System.out.println( "WARN : Server has failed, election request cannot be processed" );
                         }
                         break;
 
                     case "ok":
                         try {
                             sendOK();
-                        }
-                        catch( Exception e ) {
+                        } catch( Exception e ) {
                             e.printStackTrace();
                         }
                         break;
 
                     case "coordinator":
+                        try {
                             sendCoordinatorMsg();
+                        } catch( Exception e ) {
+                            e.printStackTrace();
+                        }
                         break;
                 }
                 break;

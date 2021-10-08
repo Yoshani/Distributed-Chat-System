@@ -183,6 +183,7 @@ public class BullyAlgorithm implements Runnable{
             case "Heartbeat":
                 while( true ) {
                     try {
+                        Thread.sleep(10);
                         if( leaderFlag && ServerState.getInstance().getSelfID() != ServerState.getInstance().getLeaderID() ) {
                             Thread.sleep( 1500 );
                             Server destServer = ServerState.getInstance().getServers()
@@ -199,8 +200,7 @@ public class BullyAlgorithm implements Runnable{
                     catch( Exception e ) {
                         leaderFlag = false;
                         System.out.println( "WARN : Leader has failed!" );
-                        System.out.println( "INFO : Election in progress= " + electionInProgress + " received = " + receivedOk );
-                        //send election request
+                        // send election request
                         Runnable sender = new BullyAlgorithm( "Sender", "election" );
                         new Thread( sender ).start();
                     }

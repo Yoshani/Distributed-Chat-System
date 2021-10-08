@@ -23,6 +23,25 @@ public class Main {
                 throw new IllegalArgumentException();
             }
 
+            /**
+             Coordination socket
+             **/
+            // server socket for coordination
+            ServerSocket serverCoordinationSocket = new ServerSocket();
+
+            // bind SocketAddress with inetAddress and port
+            SocketAddress endPointCoordination = new InetSocketAddress(
+                    ServerState.getInstance().getServerAddress(),
+                    ServerState.getInstance().getCoordinationPort()
+            );
+            serverCoordinationSocket.bind( endPointCoordination );
+            System.out.println( serverCoordinationSocket.getLocalSocketAddress() );
+            System.out.println( "LOG  : TCP Server waiting for coordination on port " +
+                                        serverCoordinationSocket.getLocalPort() ); // port open for coordination
+
+            /**
+             Client socket
+             **/
             // server socket for clients
             ServerSocket serverClientsSocket = new ServerSocket();
 
@@ -37,12 +56,19 @@ public class Main {
                     serverClientsSocket.getLocalPort()); // port open for clients
 
             /**
+             Handle coordination
+             **/
+            ServerHandlerThread serverHandlerThread = new ServerHandlerThread(serverCoordinationSocket);
+            // starting the thread
+            serverHandlerThread.start();
+
+            /**
              Maintain consensus using Bully Algorithm
              **/
             BullyAlgorithm.initialize();
 
-            Runnable receiver = new BullyAlgorithm("Receiver");
-            new Thread(receiver).start();
+//            Runnable receiver = new BullyAlgorithm("Receiver");
+//            new Thread(receiver).start();
 
             Runnable heartbeat = new BullyAlgorithm("Heartbeat");
             new Thread(heartbeat).start();
@@ -53,6 +79,8 @@ public class Main {
             while (true) {
                 Socket clientSocket = serverClientsSocket.accept();
                 ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
+                clientHandlerThread.setThreadID( clientHandlerThread.getId() );
+                System.out.println("thread id : "+clientHandlerThread.getId());
                 // starting the thread
                 ServerState.getInstance().addClientHandlerThreadToList(clientHandlerThread);
                 clientHandlerThread.start();

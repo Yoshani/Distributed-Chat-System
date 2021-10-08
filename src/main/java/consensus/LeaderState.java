@@ -3,6 +3,8 @@ package consensus;
 import server.ServerState;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class LeaderState
 {
@@ -29,17 +31,20 @@ public class LeaderState
         return leaderStateInstance;
     }
 
-    public static boolean isLeader() {
-        return BullyAlgorithm.leaderFlag &&
-                       ( ServerState.getInstance().getSelfID() == LeaderState.getInstance().getLeaderID() );
+    public boolean isLeader() {
+        return ServerState.getInstance().getSelfID() == LeaderState.getInstance().getLeaderID();
+    }
+
+    public boolean isLeaderElected() {
+        return BullyAlgorithm.leaderFlag;
     }
 
     public boolean isClientIDAlreadyTaken(String clientID){
-        for ( String key: pendingClients.keySet()) {
-            if (key.equals( clientID ))
-                return true;
-        }
-        return false;
+        Set<String> allClients = new HashSet<>();
+        allClients.addAll( pendingClients.keySet() );
+        allClients.addAll( activeClients.keySet() );
+
+        return allClients.contains( clientID );
     }
 
     public int getLeaderID()

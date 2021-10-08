@@ -1,9 +1,10 @@
 package consensus;
 
 import messaging.MessageTransfer;
+import messaging.ServerMessage;
 import org.json.simple.JSONObject;
 import server.Server;
-import server.ServerMessage;
+import messaging.ClientMessage;
 import server.ServerState;
 
 import java.io.BufferedReader;
@@ -18,9 +19,9 @@ public class BullyAlgorithm implements Runnable{
     String operation;
     String reqType;
     static int sourceID=-1;
-    static boolean receivedOk = false;
-    static boolean leaderFlag = false;
-    static boolean electionInProgress = false;
+    static volatile boolean receivedOk = false;
+    static volatile boolean leaderFlag = false;
+    static volatile boolean electionInProgress = false;
 
     public BullyAlgorithm( String operation) {
         this.operation = operation;
@@ -60,7 +61,7 @@ public class BullyAlgorithm implements Runnable{
 
                     if( receivedOk && !leaderFlag )
                     {
-                        System.out.println( "INFO : Received OK but coordinator message was not receivedOk" );
+                        System.out.println( "INFO : Received OK but coordinator message was not received" );
 
                         electionInProgress = false;
                         receivedOk = false;
@@ -74,91 +75,91 @@ public class BullyAlgorithm implements Runnable{
                 }
                 break;
 
-            case "Receiver":
-                try
-                {
-                    // server socket for coordination
-                    ServerSocket serverCoordinationSocket = new ServerSocket();
+//            case "Receiver":
+//                try
+//                {
+//                    // server socket for coordination
+//                    ServerSocket serverCoordinationSocket = new ServerSocket();
+//
+//                    // bind SocketAddress with inetAddress and port
+//                    SocketAddress endPointCoordination = new InetSocketAddress(
+//                            ServerState.getInstance().getServerAddress(),
+//                            ServerState.getInstance().getCoordinationPort()
+//                    );
+//                    serverCoordinationSocket.bind( endPointCoordination );
+//                    System.out.println( serverCoordinationSocket.getLocalSocketAddress() );
+//                    System.out.println( "LOG  : TCP Server waiting for coordination on port " +
+//                                                serverCoordinationSocket.getLocalPort() ); // port open for coordination
 
-                    // bind SocketAddress with inetAddress and port
-                    SocketAddress endPointCoordination = new InetSocketAddress(
-                            ServerState.getInstance().getServerAddress(),
-                            ServerState.getInstance().getCoordinationPort()
-                    );
-                    serverCoordinationSocket.bind( endPointCoordination );
-                    System.out.println( serverCoordinationSocket.getLocalSocketAddress() );
-                    System.out.println( "LOG  : TCP Server waiting for coordination on port " +
-                                                serverCoordinationSocket.getLocalPort() ); // port open for coordination
+//                    while( true ) {
+//                        Socket serverSocket = serverCoordinationSocket.accept();
+//
+//                        BufferedReader bufferedReader = new BufferedReader(
+//                                new InputStreamReader( serverSocket.getInputStream(), StandardCharsets.UTF_8 )
+//                        );
+//                        String jsonStringFromServer = bufferedReader.readLine();
+//
+//                        // convert received message to json object
+//                        JSONObject j_object = MessageTransfer.convertToJson( jsonStringFromServer );
 
-                    while( true ) {
-                        Socket serverSocket = serverCoordinationSocket.accept();
-
-                        BufferedReader bufferedReader = new BufferedReader(
-                                new InputStreamReader( serverSocket.getInputStream(), StandardCharsets.UTF_8 )
-                        );
-                        String jsonStringFromServer = bufferedReader.readLine();
-
-                        // convert received message to json object
-                        JSONObject j_object = MessageTransfer.convertToJson( jsonStringFromServer );
-
-                        if( MessageTransfer.hasKey( j_object, "option" ) ) {
-                            String option = j_object.get( "option" ).toString();
-                            switch( option ) {
-                                case "election":
-                                    // {"option": "election", "source": 1}
-                                    sourceID = Integer.parseInt(j_object.get( "source" ).toString());
-                                    System.out.println( "INFO : Received election request from s" + sourceID );
-
-                                    if( ServerState.getInstance().getSelfID() > sourceID ) {
-                                        Runnable sender = new BullyAlgorithm( "Sender", "ok" );
-                                        new Thread( sender ).start();
-                                    }
-                                    if( !electionInProgress ) {
-                                        Runnable sender = new BullyAlgorithm( "Sender", "election" );
-                                        new Thread( sender ).start();
-                                        //startTime = System.currentTimeMillis();
-                                        electionInProgress = true;
-
-                                        Runnable timer = new BullyAlgorithm( "Timer" );
-                                        new Thread( timer ).start();
-                                        System.out.println( "INFO : Election started");
-                                    }
-                                    break;
-                                case "ok": {
-                                    // {"option": "ok", "sender": 1}
-                                    receivedOk = true;
-                                    int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
-                                    System.out.println( "INFO : Received OK from s" + senderID );
-                                    break;
-                                }
-                                case "coordinator":
-                                    // {"option": "coordinator", "leader": 1}
-                                    LeaderState.getInstance().setLeaderID(
-                                            Integer.parseInt(j_object.get( "leader" ).toString()) );
-                                    leaderFlag = true;
-                                    electionInProgress = false;
-                                    receivedOk = false;
-                                    System.out.println( "INFO : Leader selected is s" +
-                                                                LeaderState.getInstance().getLeaderID() );
-                                    break;
-                                case "heartbeat": {
-                                    // {"option": "heartbeat", "sender": 1}
-                                    int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
-                                    System.out.println( "INFO : Heartbeat received from s" + senderID );
-                                    break;
-                                }
-                            }
-                        }
-                        else {
-                            System.out.println( "WARN : Command error, Corrupted JSON from Server" );
-                        }
-                        serverSocket.close();
-                    }
-                }
-                catch( Exception e ) {
-                    e.printStackTrace();
-                }
-                break;
+//                        if( MessageTransfer.hasKey( j_object, "option" ) ) {
+//                            String option = j_object.get( "option" ).toString();
+//                            switch( option ) {
+//                                case "election":
+//                                    // {"option": "election", "source": 1}
+//                                    sourceID = Integer.parseInt(j_object.get( "source" ).toString());
+//                                    System.out.println( "INFO : Received election request from s" + sourceID );
+//
+//                                    if( ServerState.getInstance().getSelfID() > sourceID ) {
+//                                        Runnable sender = new BullyAlgorithm( "Sender", "ok" );
+//                                        new Thread( sender ).start();
+//                                    }
+//                                    if( !electionInProgress ) {
+//                                        Runnable sender = new BullyAlgorithm( "Sender", "election" );
+//                                        new Thread( sender ).start();
+//                                        //startTime = System.currentTimeMillis();
+//                                        electionInProgress = true;
+//
+//                                        Runnable timer = new BullyAlgorithm( "Timer" );
+//                                        new Thread( timer ).start();
+//                                        System.out.println( "INFO : Election started");
+//                                    }
+//                                    break;
+//                                case "ok": {
+//                                    // {"option": "ok", "sender": 1}
+//                                    receivedOk = true;
+//                                    int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
+//                                    System.out.println( "INFO : Received OK from s" + senderID );
+//                                    break;
+//                                }
+//                                case "coordinator":
+//                                    // {"option": "coordinator", "leader": 1}
+//                                    LeaderState.getInstance().setLeaderID(
+//                                            Integer.parseInt(j_object.get( "leader" ).toString()) );
+//                                    leaderFlag = true;
+//                                    electionInProgress = false;
+//                                    receivedOk = false;
+//                                    System.out.println( "INFO : Leader selected is s" +
+//                                                                LeaderState.getInstance().getLeaderID() );
+//                                    break;
+//                                case "heartbeat": {
+//                                    // {"option": "heartbeat", "sender": 1}
+//                                    int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
+//                                    System.out.println( "INFO : Heartbeat received from s" + senderID );
+//                                    break;
+//                                }
+//                            }
+//                        }
+//                        else {
+//                            System.out.println( "WARN : Command error, Corrupted JSON from Server" );
+//                        }
+//                        serverSocket.close();
+//                    }
+//                }
+//                catch( Exception e ) {
+//                    e.printStackTrace();
+//                }
+//                break;
 
             case "Heartbeat":
                 while( true ) {
@@ -288,6 +289,55 @@ public class BullyAlgorithm implements Runnable{
                 receivedOk = false;
                 Runnable timer = new BullyAlgorithm("Timer");
                 new Thread(timer).start();
+            }
+        }
+    }
+
+    public static void receiveMessages(JSONObject j_object) {
+        String option = j_object.get( "option" ).toString();
+        switch( option ) {
+            case "election":
+                // {"option": "election", "source": 1}
+                sourceID = Integer.parseInt(j_object.get( "source" ).toString());
+                System.out.println( "INFO : Received election request from s" + sourceID );
+
+                if( ServerState.getInstance().getSelfID() > sourceID ) {
+                    Runnable sender = new BullyAlgorithm( "Sender", "ok" );
+                    new Thread( sender ).start();
+                }
+                if( !electionInProgress ) {
+                    Runnable sender = new BullyAlgorithm( "Sender", "election" );
+                    new Thread( sender ).start();
+                    //startTime = System.currentTimeMillis();
+                    electionInProgress = true;
+
+                    Runnable timer = new BullyAlgorithm( "Timer" );
+                    new Thread( timer ).start();
+                    System.out.println( "INFO : Election started");
+                }
+                break;
+            case "ok": {
+                // {"option": "ok", "sender": 1}
+                receivedOk = true;
+                int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
+                System.out.println( "INFO : Received OK from s" + senderID );
+                break;
+            }
+            case "coordinator":
+                // {"option": "coordinator", "leader": 1}
+                LeaderState.getInstance().setLeaderID(
+                        Integer.parseInt(j_object.get( "leader" ).toString()) );
+                leaderFlag = true;
+                electionInProgress = false;
+                receivedOk = false;
+                System.out.println( "INFO : Leader selected is s" +
+                                            LeaderState.getInstance().getLeaderID() );
+                break;
+            case "heartbeat": {
+                // {"option": "heartbeat", "sender": 1}
+                int senderID = Integer.parseInt(j_object.get( "sender" ).toString());
+                System.out.println( "INFO : Heartbeat received from s" + senderID );
+                break;
             }
         }
     }

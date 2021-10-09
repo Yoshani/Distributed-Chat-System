@@ -235,7 +235,7 @@ public class ClientHandlerThread extends Thread {
 
                 ServerState.getInstance().getRoomMap().get( formerRoomID ).removeParticipants( clientState );
 
-                Room newRoom = new Room( clientState.getClientID(), newRoomID );
+                Room newRoom = new Room( clientState.getClientID(), newRoomID, ServerState.getInstance().getSelfID() );
                 ServerState.getInstance().getRoomMap().put( newRoomID, newRoom );
 
                 clientState.setRoomID( newRoomID );
@@ -245,7 +245,8 @@ public class ClientHandlerThread extends Thread {
                 synchronized( connected )
                 { //TODO : check sync | lock on out buffer?
                     messageSend( null, "createroom " + newRoomID + " true", null );
-                    messageSend( formerSocket, "roomchangeall " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null );
+                    messageSend( formerSocket, "roomchangeall " + clientState.getClientID() +
+                                                       " " + formerRoomID + " " + newRoomID, null );
                 }
             } else if ( approvedRoomCreation == 0 ) {
                 System.out.println("WARN : Room id already in use");

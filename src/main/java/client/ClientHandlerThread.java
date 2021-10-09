@@ -23,7 +23,6 @@ public class ClientHandlerThread extends Thread {
 
     private final Socket clientSocket;
     private ClientState clientState;
-    private Long threadID;
     private int approvedClientID = -1;
     private int approvedRoomCreation = -1;
     final Object lock;
@@ -34,10 +33,6 @@ public class ClientHandlerThread extends Thread {
 
         this.clientSocket = clientSocket;
         this.lock = new Object();
-    }
-
-    public void setThreadID(Long threadID) {
-        this.threadID = threadID;
     }
 
     public void setApprovedClientID( int approvedClientID ) {
@@ -107,7 +102,7 @@ public class ClientHandlerThread extends Thread {
                             MessageTransfer.sendToLeader(
                                     ServerMessage.getClientIdApprovalRequest( clientID,
                                             String.valueOf( ServerState.getInstance().getSelfID() ),
-                                            String.valueOf( threadID )
+                                            String.valueOf( this.getId() )
                                     )
                             );
 
@@ -182,7 +177,7 @@ public class ClientHandlerThread extends Thread {
     //create room
     private void createRoom(String newRoomID, Socket connected, String jsonStringFromClient) throws IOException, InterruptedException
     {
-        if (checkID(newRoomID)) {
+        if (checkID(newRoomID) || clientState.isRoomOwner()) {
             // busy wait until leader is elected
             while(!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
@@ -195,8 +190,7 @@ public class ClientHandlerThread extends Thread {
                     // if self is leader get direct approval
                     if( LeaderState.getInstance().isLeader() )
                     {
-                        approvedRoomCreation = LeaderState.getInstance()
-                                                          .isRoomCreationApproved( clientState.getClientID(), newRoomID ) ? 1 : 0;
+                        approvedRoomCreation = LeaderState.getInstance().isRoomCreationApproved( newRoomID ) ? 1 : 0;
                     }
                     else
                     {
@@ -207,7 +201,7 @@ public class ClientHandlerThread extends Thread {
                                     ServerMessage.getRoomCreateApprovalRequest( clientState.getClientID(),
                                             newRoomID,
                                             String.valueOf( ServerState.getInstance().getSelfID() ),
-                                            String.valueOf( threadID )
+                                            String.valueOf( this.getId() )
                                     )
                             );
 
@@ -245,6 +239,7 @@ public class ClientHandlerThread extends Thread {
                 ServerState.getInstance().getRoomMap().put( newRoomID, newRoom );
 
                 clientState.setRoomID( newRoomID );
+                clientState.setRoomOwner( true );
                 newRoom.addParticipants( clientState );
 
                 synchronized( connected )
@@ -253,12 +248,12 @@ public class ClientHandlerThread extends Thread {
                     messageSend( formerSocket, "roomchangeall " + clientState.getClientID() + " " + formerRoomID + " " + newRoomID, null );
                 }
             } else if ( approvedRoomCreation == 0 ) {
-                System.out.println("WARN : Room id already in use or client already owns a room");
+                System.out.println("WARN : Room id already in use");
                 messageSend(null, "createroom " + newRoomID + " false", null);
             }
             approvedRoomCreation = -1;
         } else {
-            System.out.println("WARN : Recieved wrong room ID type");
+            System.out.println("WARN : Received wrong room ID type or client already owns a room");
             messageSend(null, "createroom " + newRoomID + " false", null);
         }
     }
@@ -318,6 +313,7 @@ public class ClientHandlerThread extends Thread {
                 }
 
                 ServerState.getInstance().getRoomMap().remove(roomID);
+                clientState.setRoomOwner( false );
 
                 for(String client:formerClientList.keySet()){
                     String id = formerClientList.get(client).getClientID();

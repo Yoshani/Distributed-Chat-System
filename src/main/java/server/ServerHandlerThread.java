@@ -18,7 +18,7 @@ public class ServerHandlerThread extends Thread {
 
     private final ServerSocket serverCoordinationSocket;
 
-    public ServerHandlerThread( ServerSocket serverCoordinationSocket) {
+    public ServerHandlerThread( ServerSocket serverCoordinationSocket ) {
         this.serverCoordinationSocket = serverCoordinationSocket;
     }
 
@@ -80,6 +80,10 @@ public class ServerHandlerThread extends Thread {
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
                                                                              .getClientHandlerThread( threadID );
                         clientHandlerThread.setApprovedClientID( approved );
+                        Object lock = clientHandlerThread.getLock();
+                        synchronized( lock ) {
+                            lock.notify();
+                        }
 
                     } else if ( j_object.get("type").equals("roomcreateapprovalrequest") ) {
 
@@ -118,6 +122,10 @@ public class ServerHandlerThread extends Thread {
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
                                                                              .getClientHandlerThread( threadID );
                         clientHandlerThread.setApprovedRoomCreation( approved );
+                        Object lock = clientHandlerThread.getLock();
+                        synchronized( lock ) {
+                            lock.notify();
+                        }
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

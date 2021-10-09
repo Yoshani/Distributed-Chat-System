@@ -48,8 +48,8 @@ public class LeaderState
         activeClients.remove( clientID );
     }
 
-    public boolean isRoomCreationApproved( String clientID, String roomID ) {
-        return !(activeServerRooms.containsKey( roomID ) || activeClientRooms.containsKey( clientID ));
+    public boolean isRoomCreationApproved( String roomID ) {
+        return !(activeServerRooms.containsKey( roomID ));
     }
 
     public void addApprovedRoom(String clientID, String roomID, int serverID) {

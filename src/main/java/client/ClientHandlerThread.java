@@ -25,15 +25,17 @@ public class ClientHandlerThread extends Thread {
     private Long threadID;
     private int approvedClientID = -1;
     private int approvedRoomCreation = -1;
+    final Object lock;
 
     //TODO : check input stream local var
     private DataOutputStream dataOutputStream;
 
-    public ClientHandlerThread(Socket clientSocket) {
+    public ClientHandlerThread( Socket clientSocket ) {
         String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
 
         this.clientSocket = clientSocket;
+        this.lock = new Object();
     }
 
     public void setThreadID(Long threadID) {
@@ -46,6 +48,10 @@ public class ClientHandlerThread extends Thread {
 
     public void setApprovedRoomCreation( int approvedRoomCreation ) {
         this.approvedRoomCreation = approvedRoomCreation;
+    }
+
+    public Object getLock() {
+        return lock;
     }
 
     //check the existence of a key in json object
@@ -112,37 +118,44 @@ public class ClientHandlerThread extends Thread {
             while(!LeaderState.getInstance().isLeaderElected()) { // TODO: any better way to do this?
                 Thread.sleep(1000);
             }
-            while( approvedClientID == -1 ) {
-                // if self is leader get direct approval
-                if( LeaderState.getInstance().isLeader() ) {
-                    approvedClientID = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
-                } else {
-                    try
+            synchronized( lock ) {
+                while( approvedClientID == -1 )
+                {
+                    // if self is leader get direct approval
+                    if( LeaderState.getInstance().isLeader() )
                     {
-                        // send client id approval request to leader
-                        MessageTransfer.sendToLeader(
-                                ServerMessage.getClientIdApprovalRequest( clientID,
-                                        String.valueOf( ServerState.getInstance().getSelfID()),
-                                        String.valueOf( threadID )
-                                )
-                        );
+                        approvedClientID = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // send client id approval request to leader
+                            MessageTransfer.sendToLeader(
+                                    ServerMessage.getClientIdApprovalRequest( clientID,
+                                            String.valueOf( ServerState.getInstance().getSelfID() ),
+                                            String.valueOf( threadID )
+                                    )
+                            );
 
-                        System.out.println( "INFO : Client ID '" + clientID + "' sent to leader for approval" );
+                            System.out.println( "INFO : Client ID '" + clientID + "' sent to leader for approval" );
+                        }
+                        catch( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+                        lock.wait(7000);
                     }
-                    catch( Exception e )
-                    {
-                        e.printStackTrace();
-                    }
-                    Thread.sleep( 7000 );
                 }
             }
+
             if( approvedClientID == 1 ) {
                 System.out.println( "INFO : Received correct ID ::" + jsonStringFromClient );
                 this.clientState = new ClientState( clientID, ServerState.getInstance().getMainHall().getRoomID(),
                         connected.getPort(), connected );
                 ServerState.getInstance().getMainHall().addParticipants( clientState );
 
-                //create broadcast list
+                // create broadcast list
                 String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
                 HashMap<String,ClientState> mainHallClientList = ServerState.getInstance()
                                                                             .getRoomMap()
@@ -164,6 +177,7 @@ public class ClientHandlerThread extends Thread {
                 System.out.println("WARN : ID already in use");
                 messageSend(null, "newid false", null);
             }
+            approvedClientID = -1;
         } else {
             System.out.println("WARN : Recieved wrong ID type");
             messageSend(null, "newid false", null);
@@ -199,31 +213,39 @@ public class ClientHandlerThread extends Thread {
             while(!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
-            while( approvedRoomCreation == -1 ) {
-                // if self is leader get direct approval
-                if( LeaderState.getInstance().isLeader() ) {
-                    approvedRoomCreation = LeaderState.getInstance()
-                                                      .isRoomCreationApproved( clientState.getClientID(), newRoomID ) ? 1 : 0;
-                } else {
-                    try
-                    {
-                        // send room creation approval request to leader
-                        MessageTransfer.sendToLeader(
-                                ServerMessage.getRoomCreateApprovalRequest( clientState.getClientID(),
-                                        newRoomID,
-                                        String.valueOf( ServerState.getInstance().getSelfID()),
-                                        String.valueOf( threadID )
-                                )
-                        );
 
-                        System.out.println( "INFO : Room '" + newRoomID + "' create request by '"
-                                                    + clientState.getClientID() + "' sent to leader for approval" );
-                    }
-                    catch( Exception e )
+            synchronized( lock )
+            {
+                while( approvedRoomCreation == -1 )
+                {
+                    // if self is leader get direct approval
+                    if( LeaderState.getInstance().isLeader() )
                     {
-                        e.printStackTrace();
+                        approvedRoomCreation = LeaderState.getInstance()
+                                                          .isRoomCreationApproved( clientState.getClientID(), newRoomID ) ? 1 : 0;
                     }
-                    Thread.sleep( 7000 );
+                    else
+                    {
+                        try
+                        {
+                            // send room creation approval request to leader
+                            MessageTransfer.sendToLeader(
+                                    ServerMessage.getRoomCreateApprovalRequest( clientState.getClientID(),
+                                            newRoomID,
+                                            String.valueOf( ServerState.getInstance().getSelfID() ),
+                                            String.valueOf( threadID )
+                                    )
+                            );
+
+                            System.out.println( "INFO : Room '" + newRoomID + "' create request by '"
+                                                        + clientState.getClientID() + "' sent to leader for approval" );
+                        }
+                        catch( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+                        lock.wait( 7000 );
+                    }
                 }
             }
             if( approvedRoomCreation == 1) {
@@ -260,6 +282,7 @@ public class ClientHandlerThread extends Thread {
                 System.out.println("WARN : Room id already in use or client already owns a room");
                 messageSend(null, "createroom " + newRoomID + " false", null);
             }
+            approvedRoomCreation = -1;
         } else {
             System.out.println("WARN : Recieved wrong room ID type");
             messageSend(null, "createroom " + newRoomID + " false", null);

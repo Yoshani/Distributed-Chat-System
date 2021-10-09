@@ -31,7 +31,7 @@ public class ClientHandlerThread extends Thread {
     //TODO : check input stream local var
     private DataOutputStream dataOutputStream;
 
-    public ClientHandlerThread( Socket clientSocket ) {
+    public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
 

@@ -171,7 +171,8 @@ public class ClientHandlerThread extends Thread {
                 synchronized( connected )
                 {
                     messageSend( null, "newid true", null );
-                    messageSend( socketList, "roomchange " + clientID + " _" + " MainHall-" + ServerState.getInstance().getServerID(), null );
+                    messageSend( socketList, "roomchange " + clientID + " _" + " MainHall-" +
+                                                     ServerState.getInstance().getServerID(), null );
                 }
             }  else if( approvedClientID == 0 ) {
                 System.out.println("WARN : ID already in use");
@@ -368,7 +369,7 @@ public class ClientHandlerThread extends Thread {
         }
     }
 
-    //Delete room
+    // quit
     private void quit(Socket connected,String jsonStringFromClient) throws IOException {
 
         String roomID = clientState.getRoomID();

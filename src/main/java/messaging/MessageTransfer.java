@@ -9,8 +9,10 @@ import server.ServerState;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class MessageTransfer
 {
@@ -32,6 +34,27 @@ public class MessageTransfer
     //check the existence of a key in json object
     public static boolean hasKey(JSONObject jsonObject, String key) {
         return (jsonObject != null && jsonObject.get(key) != null);
+    }
+
+    //check validity of the ID
+    public static boolean checkID(String id) {
+        return (Character.toString(id.charAt(0)).matches("[a-zA-Z]+") && id.matches("[a-zA-Z0-9]+") && id.length() >= 3 && id.length() <= 16);
+    }
+
+    //send broadcast message
+    public static void sendBroadcast(JSONObject obj, ArrayList<Socket> socketList) throws IOException {
+        for (Socket each : socketList) {
+            Socket TEMP_SOCK = (Socket) each;
+            PrintWriter TEMP_OUT = new PrintWriter(TEMP_SOCK.getOutputStream());
+            TEMP_OUT.println(obj);
+            TEMP_OUT.flush();
+        }
+    }
+    //send message to client
+    public static void sendClient(JSONObject obj, Socket socket) throws IOException {
+        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+        dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
+        dataOutputStream.flush();
     }
 
     public static void send(JSONObject obj, Server destServer) throws IOException

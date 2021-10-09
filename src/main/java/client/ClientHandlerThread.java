@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Arrays;
+import static messaging.MessageTransfer.*;
 
 public class ClientHandlerThread extends Thread {
 
@@ -25,9 +26,6 @@ public class ClientHandlerThread extends Thread {
     private Long threadID;
     private int approvedClientID = -1;
     private int approvedRoomCreation = -1;
-
-    //TODO : check input stream local var
-    private DataOutputStream dataOutputStream;
 
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
@@ -48,30 +46,6 @@ public class ClientHandlerThread extends Thread {
         this.approvedRoomCreation = approvedRoomCreation;
     }
 
-    //check the existence of a key in json object
-    private boolean hasKey(JSONObject jsonObject, String key) {
-        return (jsonObject != null && jsonObject.get(key) != null);
-    }
-
-    //check validity of the ID
-    private boolean checkID(String id) {
-        return (Character.toString(id.charAt(0)).matches("[a-zA-Z]+") && id.matches("[a-zA-Z0-9]+") && id.length() >= 3 && id.length() <= 16);
-    }
-
-    //send broadcast message
-    private void sendBroadcast(JSONObject obj, ArrayList<Socket> socketList) throws IOException {
-        for (Socket each : socketList) {
-            Socket TEMP_SOCK = (Socket) each;
-            PrintWriter TEMP_OUT = new PrintWriter(TEMP_SOCK.getOutputStream());
-            TEMP_OUT.println(obj);
-            TEMP_OUT.flush();
-        }
-    }
-    //send message to client
-    private void send(JSONObject obj) throws IOException {
-        dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
-        dataOutputStream.flush();
-    }
 
     //format message before sending it to client
     private void messageSend(ArrayList<Socket> socketList, String msg, List<String> msgList) throws IOException {
@@ -79,25 +53,25 @@ public class ClientHandlerThread extends Thread {
         String[] array = msg.split(" ");
         if (array[0].equals("newid")) {
             sendToClient = ClientMessage.getApprovalNewID(array[1]);
-            send(sendToClient);
+            sendClient(sendToClient,clientSocket);
         } else if (array[0].equals("roomchange")) {
             sendToClient = ClientMessage.getJoinRoom(array[1], array[2].replace("_", ""), array[3]);
             sendBroadcast(sendToClient, socketList);
         } else if (array[0].equals("createroom")) {
             sendToClient = ClientMessage.getCreateRoom(array[1], array[2]);
-            send(sendToClient);
+            sendClient(sendToClient,clientSocket);
         } else if (array[0].equals("roomchangeall")) {
             sendToClient = ClientMessage.getCreateRoomChange(array[1], array[2], array[3]);
             sendBroadcast(sendToClient, socketList);
         } else if (array[0].equals("roomcontents")) {
             sendToClient = ClientMessage.getWho(array[1], msgList, array[2]);
-            send(sendToClient);
+            sendClient(sendToClient,clientSocket);
         } else if (array[0].equals("roomlist")) {
             sendToClient = ClientMessage.getList(msgList);
-            send(sendToClient);
+            sendClient(sendToClient,clientSocket);
         } else if (array[0].equals("deleteroom")) {
             sendToClient = ClientMessage.getDeleteRoom(array[1], array[2]);
-            send(sendToClient);
+            sendClient(sendToClient,clientSocket);
         } else if (array[0].equals("message")) {
             sendToClient = ClientMessage.getMessage(array[1], String.join(" ",Arrays.copyOfRange(array, 2, array.length)));
             sendBroadcast(sendToClient, socketList);
@@ -345,7 +319,7 @@ public class ClientHandlerThread extends Thread {
         }
     }
 
-    //Delete room
+    //quit room
     private void quit(Socket connected,String jsonStringFromClient) throws IOException {
 
         String roomID = clientState.getRoomID();
@@ -422,9 +396,6 @@ public class ClientHandlerThread extends Thread {
 
             BufferedReader bufferedReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-
-            this.dataOutputStream = new DataOutputStream(clientSocket.getOutputStream());
-
 
             while (true) {
 

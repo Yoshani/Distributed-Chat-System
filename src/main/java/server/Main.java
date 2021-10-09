@@ -58,7 +58,7 @@ public class Main {
             /**
              Handle coordination
              **/
-            ServerHandlerThread serverHandlerThread = new ServerHandlerThread(serverCoordinationSocket);
+            ServerHandlerThread serverHandlerThread = new ServerHandlerThread( serverCoordinationSocket );
             // starting the thread
             serverHandlerThread.start();
 
@@ -75,7 +75,7 @@ public class Main {
              **/
             while (true) {
                 Socket clientSocket = serverClientsSocket.accept();
-                ClientHandlerThread clientHandlerThread = new ClientHandlerThread(clientSocket);
+                ClientHandlerThread clientHandlerThread = new ClientHandlerThread( clientSocket );
                 clientHandlerThread.setThreadID( clientHandlerThread.getId() );
                 // starting the thread
                 ServerState.getInstance().addClientHandlerThreadToMap( clientHandlerThread );

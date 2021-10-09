@@ -64,7 +64,7 @@ public class ServerHandlerThread extends Thread {
                                     destServer
                             );
                             System.out.println("INFO : Client ID '"+ clientID +
-                                                       "' from s" + sender + " is " + (approved ? "":"not") + " approved");
+                                                       "' from s" + sender + " is" + (approved ? " ":" not ") + "approved");
                         }
                         catch(Exception e) {
                             e.printStackTrace();
@@ -104,7 +104,7 @@ public class ServerHandlerThread extends Thread {
                             );
                             System.out.println("INFO : Room '"+ roomID +
                                                "' creation request from client " + clientID +
-                                               " is " + (approved ? "":"not") + " approved");
+                                               " is" + (approved ? " ":" not ") + "approved");
                         }
                         catch(Exception e) {
                             e.printStackTrace();

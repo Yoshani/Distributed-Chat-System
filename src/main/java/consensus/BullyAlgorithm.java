@@ -75,7 +75,7 @@ public class BullyAlgorithm implements Runnable{
                             Server destServer = ServerState.getInstance().getServers()
                                                            .get( LeaderState.getInstance().getLeaderID() );
 
-                            MessageTransfer.send(
+                            MessageTransfer.sendServer(
                                     ServerMessage.getHeartbeat( String.valueOf(ServerState.getInstance().getSelfID()) ),
                                     destServer
                             );
@@ -131,7 +131,7 @@ public class BullyAlgorithm implements Runnable{
                 Server destServer = ServerState.getInstance().getServers().get(key);
 
                 try {
-                    MessageTransfer.send(
+                    MessageTransfer.sendServer(
                             ServerMessage.getCoordinator( String.valueOf(ServerState.getInstance().getSelfID()) ),
                             destServer
                     );
@@ -151,7 +151,7 @@ public class BullyAlgorithm implements Runnable{
     public static void sendOK() {
         try {
             Server destServer = ServerState.getInstance().getServers().get(sourceID);
-            MessageTransfer.send(
+            MessageTransfer.sendServer(
                     ServerMessage.getOk( String.valueOf(ServerState.getInstance().getSelfID()) ),
                     destServer
             );
@@ -173,7 +173,7 @@ public class BullyAlgorithm implements Runnable{
             if( key > ServerState.getInstance().getSelfID() ){
                 Server destServer = ServerState.getInstance().getServers().get(key);
                 try {
-                    MessageTransfer.send(
+                    MessageTransfer.sendServer(
                             ServerMessage.getElection( String.valueOf(ServerState.getInstance().getSelfID()) ),
                             destServer
                     );

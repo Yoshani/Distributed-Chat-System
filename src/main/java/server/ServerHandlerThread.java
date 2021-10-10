@@ -59,7 +59,7 @@ public class ServerHandlerThread extends Thread {
                                                        .get( sender );
                         try {
                             // send client id approval reply to sender
-                            MessageTransfer.send(
+                            MessageTransfer.sendServer(
                                     ServerMessage.getClientIdApprovalReply( String.valueOf(approved), threadID ),
                                     destServer
                             );
@@ -102,7 +102,7 @@ public class ServerHandlerThread extends Thread {
                                                        .get( sender );
                         try {
                             // send room create approval reply to sender
-                            MessageTransfer.send(
+                            MessageTransfer.sendServer(
                                     ServerMessage.getRoomCreateApprovalReply( String.valueOf(approved), threadID ),
                                     destServer
                             );

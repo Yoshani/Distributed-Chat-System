@@ -58,7 +58,8 @@ public class MessageTransfer
         dataOutputStream.flush();
     }
 
-    public static void send(JSONObject obj, Server destServer) throws IOException
+    //send message to server
+    public static void sendServer( JSONObject obj, Server destServer) throws IOException
     {
             Socket socket = new Socket(destServer.getServerAddress(),
                     destServer.getCoordinationPort());
@@ -67,6 +68,7 @@ public class MessageTransfer
             dataOutputStream.flush();
     }
 
+    //send message to leader server
     public static void sendToLeader(JSONObject obj) throws IOException
     {
         Server destServer = ServerState.getInstance().getServers()

@@ -7,7 +7,6 @@ import java.util.List;
 public class SharedAttributes {
 
     private static List<String> rooms;
-    private static boolean added = false;
     private static int sender_;
     public SharedAttributes() {}
 

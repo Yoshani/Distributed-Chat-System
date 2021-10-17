@@ -1,5 +1,7 @@
 package server;
 
+import java.io.*;
+
 import client.ClientHandlerThread;
 import consensus.BullyAlgorithm;
 import consensus.LeaderState;
@@ -7,9 +9,6 @@ import messaging.MessageTransfer;
 import messaging.ServerMessage;
 import org.json.simple.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 public class ServerHandlerThread extends Thread {
 
     private final ServerSocket serverCoordinationSocket;
-
     public ServerHandlerThread( ServerSocket serverCoordinationSocket ) {
         this.serverCoordinationSocket = serverCoordinationSocket;
     }
@@ -27,7 +25,6 @@ public class ServerHandlerThread extends Thread {
         try {
             while( true ) {
                 Socket serverSocket = serverCoordinationSocket.accept();
-
                 BufferedReader bufferedReader = new BufferedReader(
                         new InputStreamReader( serverSocket.getInputStream(), StandardCharsets.UTF_8 )
                 );
@@ -35,6 +32,27 @@ public class ServerHandlerThread extends Thread {
 
                 // convert received message to json object
                 JSONObject j_object = MessageTransfer.convertToJson( jsonStringFromServer );
+                int index = 0;
+
+                if (j_object.containsKey("leader") && j_object.containsKey("coordinatoor")) {
+                    index = Integer.parseInt(j_object.get("leader").toString());
+                    SharedAttributes.setNeighbourIndex(index);
+                } else if (j_object.containsKey("sender")){
+                    index = Integer.parseInt(j_object.get("sender").toString());
+                    SharedAttributes.setNeighbourIndex(index);
+                }
+
+                if (MessageTransfer.hasKey( j_object, "room")) {
+                    String rooms =  (String) j_object.get("room");
+                    SharedAttributes sharedAttributes = new SharedAttributes();
+                    sharedAttributes.setRoom(rooms);
+                }
+
+                if (MessageTransfer.hasKey( j_object, "delete-room")) {
+                    String deletedRoom = (String) j_object.get("delete-room");
+                    SharedAttributes sharedAttributes = new SharedAttributes();
+                    sharedAttributes.removeRoomFromGlobalRoomList(deletedRoom);
+                }
 
                 if( MessageTransfer.hasKey( j_object, "option" ) ) {
                     // messages with 'option' tag will be handled inside BullyAlgorithm
@@ -43,8 +61,8 @@ public class ServerHandlerThread extends Thread {
                 else if (MessageTransfer.hasKey( j_object, "type" )) {
 
                     if (j_object.get("type").equals("clientidapprovalrequest")
-                                && j_object.get("clientid") != null && j_object.get( "sender" ) != null
-                                && j_object.get( "threadid" ) != null) {
+                            && j_object.get("clientid") != null && j_object.get( "sender" ) != null
+                            && j_object.get( "threadid" ) != null) {
 
                         // leader processes client ID approval request received
                         String clientID = j_object.get("clientid").toString();
@@ -56,7 +74,7 @@ public class ServerHandlerThread extends Thread {
                             LeaderState.getInstance().addApprovedClient( clientID, sender );
                         }
                         Server destServer = ServerState.getInstance().getServers()
-                                                       .get( sender );
+                                .get( sender );
                         try {
                             // send client id approval reply to sender
                             MessageTransfer.sendServer(
@@ -64,21 +82,21 @@ public class ServerHandlerThread extends Thread {
                                     destServer
                             );
                             System.out.println("INFO : Client ID '"+ clientID +
-                                                       "' from s" + sender + " is" + (approved ? " ":" not ") + "approved");
+                                    "' from s" + sender + " is" + (approved ? " ":" not ") + "approved");
                         }
                         catch(Exception e) {
                             e.printStackTrace();
                         }
 
                     } else if ( j_object.get("type").equals("clientidapprovalreply")
-                                  && j_object.get("approved") != null && j_object.get( "threadid" ) != null){
+                            && j_object.get("approved") != null && j_object.get( "threadid" ) != null){
 
                         // non leader processes client ID approval request reply received
                         int approved = Boolean.parseBoolean( j_object.get("approved").toString() ) ? 1 : 0;
                         Long threadID = Long.parseLong( j_object.get("threadid").toString() );
 
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
-                                                                             .getClientHandlerThread( threadID );
+                                .getClientHandlerThread( threadID );
                         clientHandlerThread.setApprovedClientID( approved );
                         Object lock = clientHandlerThread.getLock();
                         synchronized( lock ) {
@@ -99,7 +117,7 @@ public class ServerHandlerThread extends Thread {
                             LeaderState.getInstance().addApprovedRoom( clientID, roomID, sender );
                         }
                         Server destServer = ServerState.getInstance().getServers()
-                                                       .get( sender );
+                                .get( sender );
                         try {
                             // send room create approval reply to sender
                             MessageTransfer.sendServer(
@@ -107,8 +125,8 @@ public class ServerHandlerThread extends Thread {
                                     destServer
                             );
                             System.out.println("INFO : Room '"+ roomID +
-                                               "' creation request from client " + clientID +
-                                               " is" + (approved ? " ":" not ") + "approved");
+                                    "' creation request from client " + clientID +
+                                    " is" + (approved ? " ":" not ") + "approved");
                         }
                         catch(Exception e) {
                             e.printStackTrace();
@@ -120,7 +138,7 @@ public class ServerHandlerThread extends Thread {
                         Long threadID = Long.parseLong( j_object.get("threadid").toString() );
 
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
-                                                                             .getClientHandlerThread( threadID );
+                                .getClientHandlerThread( threadID );
                         clientHandlerThread.setApprovedRoomCreation( approved );
                         Object lock = clientHandlerThread.getLock();
                         synchronized( lock ) {

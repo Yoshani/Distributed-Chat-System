@@ -6,13 +6,14 @@ import messaging.ServerMessage;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import server.Room;
+import server.*;
 import messaging.ClientMessage;
-import server.ServerState;
 
 import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.rmi.Naming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +31,6 @@ public class ClientHandlerThread extends Thread {
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
         ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
-
         this.clientSocket = clientSocket;
         this.lock = new Object();
     }
@@ -126,9 +126,9 @@ public class ClientHandlerThread extends Thread {
                 // create broadcast list
                 String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
                 HashMap<String,ClientState> mainHallClientList = ServerState.getInstance()
-                                                                            .getRoomMap()
-                                                                            .get( mainHallRoomID )
-                                                                            .getClientStateMap();
+                        .getRoomMap()
+                        .get( mainHallRoomID )
+                        .getClientStateMap();
 
                 ArrayList<Socket> socketList = new ArrayList<>();
                 for( String each : mainHallClientList.keySet() )
@@ -140,7 +140,7 @@ public class ClientHandlerThread extends Thread {
                 {
                     messageSend( null, "newid true", null );
                     messageSend( socketList, "roomchange " + clientID + " _" + " MainHall-" +
-                                                     ServerState.getInstance().getServerID(), null );
+                            ServerState.getInstance().getServerID(), null );
                 }
             }  else if( approvedClientID == 0 ) {
                 System.out.println("WARN : ID already in use");
@@ -155,10 +155,10 @@ public class ClientHandlerThread extends Thread {
 
     //list
     private void list(Socket connected, String jsonStringFromClient) throws IOException {
-        List<String> roomsList = new ArrayList<>(ServerState.getInstance().getRoomMap().keySet());
-
+//
+//        SharedAttributes sharedAttributes = new SharedAttributes();
         System.out.println("INFO : rooms in the system :");
-        messageSend(null, "roomlist ", roomsList);
+        messageSend(null, "roomlist ", SharedAttributes.getRooms());
     }
 
     //who
@@ -206,7 +206,7 @@ public class ClientHandlerThread extends Thread {
                             );
 
                             System.out.println( "INFO : Room '" + newRoomID + "' create request by '"
-                                                        + clientState.getClientID() + "' sent to leader for approval" );
+                                    + clientState.getClientID() + "' sent to leader for approval" );
                         }
                         catch( Exception e )
                         {
@@ -220,7 +220,6 @@ public class ClientHandlerThread extends Thread {
                 System.out.println( "INFO : Received correct room ID ::" + jsonStringFromClient );
 
                 String formerRoomID = clientState.getRoomID();
-
                 String former = clientState.getRoomID();
 
                 // list of clients inside MainHall
@@ -242,12 +241,21 @@ public class ClientHandlerThread extends Thread {
                 clientState.setRoomOwner( true );
                 newRoom.addParticipants( clientState );
 
+                SharedAttributes.addNewRoomToGlobalRoomList(newRoomID, SharedAttributes.getRooms());
+
                 synchronized( connected )
                 { //TODO : check sync | lock on out buffer?
                     messageSend( null, "createroom " + newRoomID + " true", null );
                     messageSend( formerSocket, "roomchangeall " + clientState.getClientID() +
-                                                       " " + formerRoomID + " " + newRoomID, null );
+                            " " + formerRoomID + " " + newRoomID, null );
                 }
+
+                int index = SharedAttributes.getNeighbourIndex();
+                Server destServer = ServerState.getInstance().getServers().get(index);
+                JSONObject obj=new JSONObject();
+                obj.put("room",newRoomID); //////   use this for delete room function.
+                MessageTransfer.sendRooms( obj,destServer);
+
             } else if ( approvedRoomCreation == 0 ) {
                 System.out.println("WARN : Room id already in use");
                 messageSend(null, "createroom " + newRoomID + " false", null);
@@ -324,7 +332,12 @@ public class ClientHandlerThread extends Thread {
                 }
 
                 messageSend(null, "deleteroom " + roomID + " true", null);
-
+                SharedAttributes.removeRoomFromGlobalRoomList(roomID);
+                int index = SharedAttributes.getNeighbourIndex();
+                Server destServer = ServerState.getInstance().getServers().get(index);
+                JSONObject obj=new JSONObject();
+                obj.put("delete-room",roomID);
+                MessageTransfer.sendRooms( obj,destServer);
                 System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
 
             } else {

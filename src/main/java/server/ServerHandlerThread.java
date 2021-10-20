@@ -3,6 +3,7 @@ package server;
 import java.io.*;
 
 import client.ClientHandlerThread;
+import client.ClientState;
 import consensus.BullyAlgorithm;
 import consensus.LeaderState;
 import messaging.MessageTransfer;
@@ -144,8 +145,93 @@ public class ServerHandlerThread extends Thread {
                         synchronized( lock ) {
                             lock.notify();
                         }
-                    }
-                    else {
+                    } else if (j_object.get("type").equals("joinroomapprovalrequest")){
+
+                        // leader processes join room approval request received
+
+                        //get params
+                        String clientID = j_object.get("clientid").toString();
+                        String roomID = j_object.get("roomid").toString();
+                        String formerRoomID = j_object.get("former").toString();
+                        int sender = Integer.parseInt(j_object.get("sender").toString());
+                        String threadID = j_object.get("threadid").toString();
+                        boolean isLocalRoomChange = Boolean.parseBoolean(j_object.get("isLocalRoomChange").toString());
+
+                        if (isLocalRoomChange) {
+                            //local change
+                            LeaderState.getInstance().removeJoinReqApprovedClientFromRoom(clientID, formerRoomID, sender);
+                        } else {
+                            int serverIDofTargetRoom = LeaderState.getInstance().getServerIdIfRoomExist(roomID);
+
+                            if (serverIDofTargetRoom != -1) {
+                                LeaderState.getInstance().removeJoinReqApprovedClientFromRoom(clientID, formerRoomID, sender);
+                            }
+                            Server destServer = ServerState.getInstance().getServers().get(sender);
+                            try {
+
+                                Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
+
+                                String host;
+                                String port;
+                                if (serverOfTargetRoom != null) {
+                                    host = serverOfTargetRoom.getServerAddress();
+                                    port = String.valueOf(serverOfTargetRoom.getClientsPort());
+                                } else {
+                                    host = "_";
+                                    port = "_";
+                                }
+
+                                MessageTransfer.sendServer(
+                                        ServerMessage.getJoinRoomApprovalReply(
+                                                String.valueOf(serverIDofTargetRoom),
+                                                threadID,
+                                                host,
+                                                port),
+                                        destServer
+                                );
+                                System.out.println("INFO : Join Room from [" + formerRoomID +
+                                        "] to [" + roomID + "] for client " + clientID +
+                                        " is" + (serverIDofTargetRoom != -1 ? " " : " not ") + "approved");
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else if ( j_object.get("type").equals("joinroomapprovalreply") ) {
+
+                        // non leader processes room create approval request reply received
+                        int approved = Boolean.parseBoolean(j_object.get("approved").toString()) ? 1 : 0;
+                        Long threadID = Long.parseLong(j_object.get("threadid").toString());
+                        String host = j_object.get("host").toString();
+                        String port = j_object.get("port").toString();
+
+                        ClientHandlerThread clientHandlerThread = ServerState.getInstance()
+                                .getClientHandlerThread(threadID);
+                        clientHandlerThread.setApprovedJoinRoom(approved);
+                        clientHandlerThread.setApprovedJoinRoomServerHostAddress(host);
+                        clientHandlerThread.setApprovedJoinRoomServerPort(port);
+                        //TODO check if lock required
+                        //Object lock = clientHandlerThread.getLock();
+                        //synchronized( lock ) {
+                        //    lock.notify();
+                        //}
+                    }else if(j_object.get("type").equals("movejoinack")) {
+                        //leader process move join acknowledgement from the target room server after change
+
+                        //parse params
+                        String clientID = j_object.get("clientid").toString();
+                        String roomID = j_object.get("roomid").toString();
+                        String formerRoomID = j_object.get("former").toString();
+                        int sender = Integer.parseInt(j_object.get("sender").toString());
+                        String threadID = j_object.get("threadid").toString();
+
+                        ClientState client = new ClientState(clientID,roomID,-1,null);
+                        LeaderState.getInstance().addApprovedClient(clientID, sender);
+                        LeaderState.getInstance().addClientToRoomID(client,roomID);
+
+                        System.out.println("INFO : Moved Client ["+clientID+"] to server s"+sender
+                                +" and room ["+roomID+"] is updated as current room");
+
+                    } else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );
                     }
                 }

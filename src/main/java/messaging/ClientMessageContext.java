@@ -17,9 +17,8 @@ public class ClientMessageContext {
     public CLIENT_MSG_TYPE messageType;
 
     public String clientID;
-    public String currentRoomID;
+    public String roomID;
     public String formerRoomID;
-    public String newRoomID;
 
     public int currentServerID;
 
@@ -40,18 +39,13 @@ public class ClientMessageContext {
         return this;
     }
 
-    public ClientMessageContext setCurrentRoomID(String currentRoomID) {
-        this.currentRoomID = currentRoomID;
+    public ClientMessageContext setRoomID(String roomID) {
+        this.roomID = roomID;
         return this;
     }
 
     public ClientMessageContext setFormerRoomID(String formerRoomID) {
         this.formerRoomID = formerRoomID;
-        return this;
-    }
-
-    public ClientMessageContext setNewRoomID(String newRoomID) {
-        this.newRoomID = newRoomID;
         return this;
     }
 

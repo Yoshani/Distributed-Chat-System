@@ -106,4 +106,13 @@ public class ServerMessage
         jsonObject.put("roomid", roomID);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getQuit(String clientID) {
+        // {"type" : "quit", "clientid" : "Adel"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "quit");
+        jsonObject.put("clientid", clientID);
+        return jsonObject;
+    }
 }

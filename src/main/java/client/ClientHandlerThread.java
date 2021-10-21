@@ -92,7 +92,7 @@ public class ClientHandlerThread extends Thread {
                     if( LeaderState.getInstance().isLeader() )
                     {
                         boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
-                        approvedClientID = approved ? 0 : 1;
+                        approvedClientID = approved ? 1 : 0;
                         System.out.println("INFO : Client ID '"+ clientID + " is" + (approved ? " ":" not ") + "approved");
                     }
                     else
@@ -192,7 +192,7 @@ public class ClientHandlerThread extends Thread {
                     if( LeaderState.getInstance().isLeader() )
                     {
                         boolean approved = LeaderState.getInstance().isRoomCreationApproved( newRoomID );
-                        approvedRoomCreation = approved ? 0 : 1;
+                        approvedRoomCreation = approved ? 1 : 0;
                         System.out.println("INFO : Room '"+ newRoomID +
                                                    "' creation request from client " + clientState.getClientID() +
                                                    " is" + (approved ? " ":" not ") + "approved");

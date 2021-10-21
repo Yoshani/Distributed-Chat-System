@@ -317,18 +317,23 @@ public class ClientHandlerThread extends Thread {
             Room room = ServerState.getInstance().getRoomMap().get(roomID);
             if (room.getOwnerIdentity().equals(clientState.getClientID())) {
 
-                HashMap<String,ClientState> formerClientList = ServerState.getInstance().getRoomMap().get(roomID).getClientStateMap();
-                HashMap<String,ClientState> mainHallClientList = ServerState.getInstance().getRoomMap().get(mainHallRoomID).getClientStateMap();
+                // clients in deleted room
+                HashMap<String,ClientState> formerClientList = ServerState.getInstance().getRoomMap()
+                                                                          .get(roomID).getClientStateMap();
+                // former clients in main hall
+                HashMap<String,ClientState> mainHallClientList = ServerState.getInstance().getRoomMap()
+                                                                            .get(mainHallRoomID).getClientStateMap();
                 mainHallClientList.putAll(formerClientList);
 
                 ArrayList<Socket> socketList = new ArrayList<>();
-                for (String each:mainHallClientList.keySet()){
+                for (String each : mainHallClientList.keySet()){
                     socketList.add(mainHallClientList.get(each).getSocket());
                 }
 
                 ServerState.getInstance().getRoomMap().remove(roomID);
                 clientState.setRoomOwner( false );
 
+                // broadcast roomchange message to all clients in deleted room and former clients in main hall
                 for(String client:formerClientList.keySet()){
                     String id = formerClientList.get(client).getClientID();
                     formerClientList.get(client).setRoomID(mainHallRoomID);
@@ -336,14 +341,23 @@ public class ClientHandlerThread extends Thread {
                     messageSend(socketList, "roomchangeall " + id + " " + roomID + " " + mainHallRoomID, null);
                 }
 
+                // send deleteroom approved message to room owner
                 messageSend(null, "deleteroom " + roomID + " true", null);
+                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
+
+                // send deleteroominform message to leader if self is not leader
+                if( !LeaderState.getInstance().isLeader() ) {
+                    MessageTransfer.sendToLeader(
+                            ServerMessage.getDeleteRoomInform( String.valueOf( ServerState.getInstance().getSelfID() ), roomID )
+                    );
+                }
+
                 SharedAttributes.removeRoomFromGlobalRoomList(roomID);
                 int index = SharedAttributes.getNeighbourIndex();
                 Server destServer = ServerState.getInstance().getServers().get(index);
                 JSONObject obj=new JSONObject();
                 obj.put("delete-room",roomID);
                 MessageTransfer.sendRooms( obj,destServer);
-                System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
 
             } else {
                 messageSend(null, "deleteroom " + roomID + " false", null);

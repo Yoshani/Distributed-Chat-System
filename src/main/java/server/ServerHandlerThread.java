@@ -145,6 +145,10 @@ public class ServerHandlerThread extends Thread {
                         synchronized( lock ) {
                             lock.notify();
                         }
+                    } else if ( j_object.get("type").equals("deleteroom") ) {
+                        String roomID = j_object.get("roomid").toString();
+                        // leader removes deleted room from global room list
+                        LeaderState.getInstance().removeApprovedRoom( roomID );
                     } else if(j_object.get("type").equals("gossip")){
                         GossipJob.receiveMessages(j_object);
                     }

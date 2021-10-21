@@ -96,4 +96,14 @@ public class ServerMessage
         jsonObject.put("heartbeatCountList", heartbeatCountList);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getDeleteRoomInform(String serverID, String roomID) {
+        // {"type" : "deleteroom", "serverid" : "s1", "roomid" : "jokes"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "deleteroom");
+        jsonObject.put("serverid", serverID);
+        jsonObject.put("roomid", roomID);
+        return jsonObject;
+    }
 }

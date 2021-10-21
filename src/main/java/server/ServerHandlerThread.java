@@ -148,6 +148,10 @@ public class ServerHandlerThread extends Thread {
                         String roomID = j_object.get("roomid").toString();
                         // leader removes deleted room from global room list
                         LeaderState.getInstance().removeApprovedRoom( roomID );
+                    } else if ( j_object.get("type").equals("quit") ) {
+                        String clientID = j_object.get("clientid").toString();
+                        // leader removes client from global room list
+                        LeaderState.getInstance().removeApprovedClient( clientID );
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

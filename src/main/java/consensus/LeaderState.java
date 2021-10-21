@@ -46,6 +46,7 @@ public class LeaderState
 
     public void removeApprovedClient(String clientID) {
         activeClients.remove( clientID );
+        removeRoomIfClientOwnsRoom( clientID );
     }
 
     public boolean isRoomCreationApproved( String roomID ) {
@@ -59,6 +60,15 @@ public class LeaderState
 
     public void removeApprovedRoom(String roomID) {
         activeChatRooms.remove( roomID );
+    }
+
+    public void removeRoomIfClientOwnsRoom(String clientID){
+        for( Room room : activeChatRooms.values() ) {
+            if( room.getOwnerIdentity().equals( clientID ) ) {
+                removeApprovedRoom( room.getRoomID() );
+                break;
+            }
+        }
     }
 
     public int getLeaderID()

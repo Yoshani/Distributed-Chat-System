@@ -350,6 +350,9 @@ public class ClientHandlerThread extends Thread {
                     MessageTransfer.sendToLeader(
                             ServerMessage.getDeleteRoomInform( String.valueOf( ServerState.getInstance().getSelfID() ), roomID )
                     );
+                } else {
+                    // leader removes deleted room from global room list
+                    LeaderState.getInstance().removeApprovedRoom( roomID );
                 }
 
                 SharedAttributes.removeRoomFromGlobalRoomList(roomID);
@@ -373,6 +376,16 @@ public class ClientHandlerThread extends Thread {
 
     //quit room
     private void quit(Socket connected,String jsonStringFromClient) throws IOException {
+
+        // send quit message to leader if self is not leader
+        if( !LeaderState.getInstance().isLeader() ) {
+            MessageTransfer.sendToLeader(
+                    ServerMessage.getQuit( clientState.getClientID() )
+            );
+        } else {
+            // leader removes client
+            LeaderState.getInstance().removeApprovedClient( clientState.getClientID() );
+        }
 
         String roomID = clientState.getRoomID();
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
@@ -415,7 +428,7 @@ public class ClientHandlerThread extends Thread {
                 messageSend(socketList, "roomchangeall " + clientState.getClientID() + " " + " " + " " + mainHallRoomID, null);
                 System.out.println("INFO : "+ clientState.getClientID()+ " is quit");
             }
-        } else {
+        } else { // TODO: is this part necessary for quit?
             System.out.println("WARN : Received room ID [" + roomID + "] does not exist");
             messageSend(null, "deleteroom " + roomID + " false", null);
         }

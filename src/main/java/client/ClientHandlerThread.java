@@ -146,8 +146,7 @@ public class ClientHandlerThread extends Thread {
 
             if( approvedClientID == 1 ) {
                 System.out.println( "INFO : Received correct ID ::" + jsonStringFromClient );
-                this.clientState = new ClientState( clientID, ServerState.getInstance().getMainHall().getRoomID(),
-                        clientSocket.getPort(), clientSocket );
+                this.clientState = new ClientState( clientID, ServerState.getInstance().getMainHall().getRoomID(), clientSocket );
                 ServerState.getInstance().getMainHall().addParticipants( clientState );
 
                 // create broadcast list
@@ -458,7 +457,7 @@ public class ClientHandlerThread extends Thread {
     //Move join
     private void moveJoin(String roomID, String formerRoomID, String clientID, String jsonStringFromClient) throws IOException, InterruptedException {
         if (ServerState.getInstance().getRoomMap().containsKey(roomID)){
-            this.clientState = new ClientState( clientID, roomID, clientSocket.getPort(), clientSocket );
+            this.clientState = new ClientState( clientID, roomID, clientSocket );
             ServerState.getInstance().getRoomMap().get(roomID).addParticipants( clientState );
 
             // TODO on new server :
@@ -494,7 +493,7 @@ public class ClientHandlerThread extends Thread {
             );
         } else {
             //room missing : place in main hall
-            this.clientState = new ClientState( clientID, "MainHall-"+ServerState.getInstance().getServerID(), clientSocket.getPort(), clientSocket );
+            this.clientState = new ClientState( clientID, "MainHall-"+ServerState.getInstance().getServerID(), clientSocket );
             ServerState.getInstance().getRoomMap().get("MainHall-"+ServerState.getInstance().getServerID()).addParticipants( clientState );
 
             // TODO on new server :

@@ -10,10 +10,8 @@ import server.*;
 import messaging.ClientMessage;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.rmi.Naming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +24,7 @@ public class ClientHandlerThread extends Thread {
     private ClientState clientState;
     private int approvedClientID = -1;
     private int approvedRoomCreation = -1;
+    private  int approvedRoomDeletion = -1;
     final Object lock;
 
     public ClientHandlerThread(Socket clientSocket) {
@@ -92,7 +91,9 @@ public class ClientHandlerThread extends Thread {
                     // if self is leader get direct approval
                     if( LeaderState.getInstance().isLeader() )
                     {
-                        approvedClientID = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
+                        boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
+                        approvedClientID = approved ? 0 : 1;
+                        System.out.println("INFO : Client ID '"+ clientID + " is" + (approved ? " ":" not ") + "approved");
                     }
                     else
                     {
@@ -189,7 +190,11 @@ public class ClientHandlerThread extends Thread {
                     // if self is leader get direct approval
                     if( LeaderState.getInstance().isLeader() )
                     {
-                        approvedRoomCreation = LeaderState.getInstance().isRoomCreationApproved( newRoomID ) ? 1 : 0;
+                        boolean approved = LeaderState.getInstance().isRoomCreationApproved( newRoomID );
+                        approvedRoomCreation = approved ? 0 : 1;
+                        System.out.println("INFO : Room '"+ newRoomID +
+                                                   "' creation request from client " + clientState.getClientID() +
+                                                   " is" + (approved ? " ":" not ") + "approved");
                     }
                     else
                     {

@@ -1,13 +1,17 @@
 package messaging;
 
+import java.util.List;
+
 public class ClientMessageContext {
+
     public enum CLIENT_MSG_TYPE {
         NEW_ID,
-        LIST,
-        WHO,
+        LIST,//roomlist
+        WHO,//roomcontents
         MESSAGE,
         CREATE_ROOM,
-        JOIN_ROOM,
+        JOIN_ROOM,//roomchange
+        BROADCAST_JOIN_ROOM,//roomchangeall
         ROUTE,
         MOVE_JOIN,
         DELETE_ROOM,
@@ -20,14 +24,20 @@ public class ClientMessageContext {
     public String roomID;
     public String formerRoomID;
 
-    public int currentServerID;
+    public String currentServerID;
 
     public String body;
 
     //flags
-    public boolean isNewClientIdApproved;
-    public boolean isNewRoomIdApproved;
+    public String isNewClientIdApproved;
+    public String isNewRoomIdApproved;
+    public String isDeleteRoomApproved;
 
+    public String targetHost;
+    public String targetPort;
+
+    public List<String> participantsList;
+    public List<String> roomsList;
 
     public ClientMessageContext setMessageType(CLIENT_MSG_TYPE messageType) {
         this.messageType = messageType;
@@ -49,7 +59,7 @@ public class ClientMessageContext {
         return this;
     }
 
-    public ClientMessageContext setCurrentServerID(int currentServerID) {
+    public ClientMessageContext setCurrentServerID(String currentServerID) {
         this.currentServerID = currentServerID;
         return this;
     }
@@ -59,13 +69,38 @@ public class ClientMessageContext {
         return this;
     }
 
-    public ClientMessageContext setNewClientIdApproved(boolean newClientIdApproved) {
-        isNewClientIdApproved = newClientIdApproved;
+    public ClientMessageContext setIsNewClientIdApproved(String isNewClientIdApproved) {
+        this.isNewClientIdApproved = isNewClientIdApproved;
         return this;
     }
 
-    public ClientMessageContext setNewRoomIdApproved(boolean newRoomIdApproved) {
-        isNewRoomIdApproved = newRoomIdApproved;
+    public ClientMessageContext setIsNewRoomIdApproved(String isNewRoomIdApproved) {
+        this.isNewRoomIdApproved = isNewRoomIdApproved;
+        return this;
+    }
+
+    public ClientMessageContext setIsDeleteRoomApproved(String isDeleteRoomApproved) {
+        this.isDeleteRoomApproved = isDeleteRoomApproved;
+        return this;
+    }
+
+    public ClientMessageContext setTargetHost(String targetHost) {
+        this.targetHost = targetHost;
+        return this;
+    }
+
+    public ClientMessageContext setTargetPort(String targetPort) {
+        this.targetPort = targetPort;
+        return this;
+    }
+
+    public ClientMessageContext setParticipantsList(List<String> participantsList) {
+        this.participantsList = participantsList;
+        return this;
+    }
+
+    public ClientMessageContext setRoomsList(List<String> roomsList) {
+        this.roomsList = roomsList;
         return this;
     }
 }

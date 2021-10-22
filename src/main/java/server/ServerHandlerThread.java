@@ -51,7 +51,7 @@ public class ServerHandlerThread extends Thread {
                 if (MessageTransfer.hasKey( j_object, "delete-room")) {
                     String deletedRoom = (String) j_object.get("delete-room");
                     SharedAttributes sharedAttributes = new SharedAttributes();
-                    sharedAttributes.removeRoomFromGlobalRoomList(deletedRoom);
+                    sharedAttributes.removeRoomFromGlobalRoomList(deletedRoom); // TODO: make this part consistent with other msgs
                 }
 
                 if( MessageTransfer.hasKey( j_object, "option" ) ) {
@@ -144,6 +144,17 @@ public class ServerHandlerThread extends Thread {
                         synchronized( lock ) {
                             lock.notify();
                         }
+                    } else if ( j_object.get("type").equals("deleteroom") ) {
+                        String roomID = j_object.get("roomid").toString();
+                        // leader removes deleted room from global room list
+                        LeaderState.getInstance().removeApprovedRoom( roomID );
+                        System.out.println("INFO : Room '"+ roomID + "' deleted by leader");
+
+                    } else if ( j_object.get("type").equals("quit") ) {
+                        String clientID = j_object.get("clientid").toString();
+                        // leader removes client from global room list
+                        LeaderState.getInstance().removeApprovedClient( clientID );
+                        System.out.println("INFO : Client '"+ clientID + "' deleted by leader");
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

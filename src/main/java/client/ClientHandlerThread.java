@@ -156,8 +156,7 @@ public class ClientHandlerThread extends Thread {
 
     //list
     private void list(Socket connected, String jsonStringFromClient) throws IOException {
-//
-//        SharedAttributes sharedAttributes = new SharedAttributes();
+
         System.out.println("INFO : rooms in the system :");
         messageSend(null, "roomlist ", SharedAttributes.getRooms());
     }

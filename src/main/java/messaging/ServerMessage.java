@@ -2,8 +2,20 @@ package messaging;
 
 import org.json.simple.JSONObject;
 
+import java.util.HashMap;
+
 public class ServerMessage
 {
+    private static ServerMessage instance = null;
+
+    private ServerMessage() {
+    }
+
+    public static synchronized ServerMessage getInstance() {
+        if (instance == null) instance = new ServerMessage();
+        return instance;
+    }
+
     @SuppressWarnings("unchecked")
     public static JSONObject getHeartbeat( String sender) {
         // {"option": "heartbeat", "sender": "s1"}
@@ -99,6 +111,16 @@ public class ServerMessage
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "quit");
         jsonObject.put("clientid", clientID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject gossipMessage(Integer serverId, HashMap<Integer, Integer> heartbeatCountList) {
+        // {"type":"gossip","serverid":"1","heartbeatcountlist":{"1":0,"2":1,"3":1,"4":2}}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "gossip");
+        jsonObject.put("serverId", serverId);
+        jsonObject.put("heartbeatCountList", heartbeatCountList);
         return jsonObject;
     }
 }

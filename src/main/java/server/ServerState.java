@@ -5,6 +5,8 @@ import client.ClientHandlerThread;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerState {
 
@@ -14,6 +16,9 @@ public class ServerState {
     private int coordinationPort;
     private int clientsPort;
     private int numberOfServersWithHigherIds;
+
+    private ConcurrentHashMap<Integer, String> suspectList;
+    private ConcurrentHashMap<Integer, Integer> heartbeatCountList;
 
     private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
@@ -28,6 +33,8 @@ public class ServerState {
     private static ServerState serverStateInstance;
 
     private ServerState() {
+        suspectList = new ConcurrentHashMap<>();
+        heartbeatCountList = new ConcurrentHashMap<>();
     }
 
     public static ServerState getInstance() {
@@ -132,4 +139,21 @@ public class ServerState {
     public HashMap<String, Room> getRoomMap() {
         return roomMap;
     }
+
+    public synchronized void removeServerInSuspectList(Integer serverId) {
+        suspectList.remove(serverId);
+    }
+
+    public ConcurrentHashMap<Integer, String> getSuspectList() {
+        return suspectList;
+    }
+
+    public synchronized void removeServerInCountList(Integer serverId) {
+        heartbeatCountList.remove(serverId);
+    }
+
+    public ConcurrentHashMap<Integer, Integer> getHeartbeatCountList() {
+        return heartbeatCountList;
+    }
+
 }

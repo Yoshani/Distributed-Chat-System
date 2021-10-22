@@ -8,6 +8,7 @@ import consensus.LeaderState;
 import messaging.MessageTransfer;
 import messaging.ServerMessage;
 import org.json.simple.JSONObject;
+import heartbeat.GossipJob;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -155,6 +156,8 @@ public class ServerHandlerThread extends Thread {
                         // leader removes client from global room list
                         LeaderState.getInstance().removeApprovedClient( clientID );
                         System.out.println("INFO : Client '"+ clientID + "' deleted by leader");
+                    }else if(j_object.get("type").equals("gossip")){
+                        GossipJob.receiveMessages(j_object);
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

@@ -2,6 +2,7 @@ package server;
 
 import client.ClientHandlerThread;
 import consensus.BullyAlgorithm;
+import heartbeat.GossipJob;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -69,6 +70,13 @@ public class Main {
 
             Runnable heartbeat = new BullyAlgorithm("Heartbeat");
             new Thread(heartbeat).start();
+
+            /**
+             Heartbeat detection using gossiping
+             **/
+            Runnable gossip = new GossipJob();
+            new Thread(gossip).start();
+
 
             /**
              Handle clients

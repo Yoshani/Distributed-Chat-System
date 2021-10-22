@@ -107,5 +107,37 @@ public class GossipJob implements Runnable{
 
     }
 
+    public static void receiveMessages(JSONObject j_object) {
+
+        ServerState serverState = ServerState.getInstance();
+
+        HashMap<Integer, Integer> gossipFromOthers = (HashMap<Integer, Integer>) j_object.get("heartbeatCountList");
+        Integer fromServer = (Integer) j_object.get("serverId");
+
+        System.out.println(("Receiving gossip from server: [" + fromServer.toString() + "] gossipping: " + gossipFromOthers));
+
+        //update the heartbeatcountlist by taking minimum
+        for (Integer serverId : gossipFromOthers.keySet()) {
+            Integer localHeartbeatCount = serverState.getHeartbeatCountList().get(serverId);
+            Integer remoteHeartbeatCount = gossipFromOthers.get(serverId);
+            if (localHeartbeatCount != null && remoteHeartbeatCount < localHeartbeatCount) {
+                serverState.getHeartbeatCountList().put(serverId, remoteHeartbeatCount);
+            }
+        }
+
+        System.out.println(("Current cluster heart beat state is: " + serverState.getHeartbeatCountList()));
+
+        if (null != LeaderState.getInstance() && LeaderState.getInstance().getLeaderID().equals(serverState.getSelfID())) {
+            if (serverState.getHeartbeatCountList().size() < gossipFromOthers.size()) {
+                for (Integer serverId : gossipFromOthers.keySet()) {
+                    if (!serverState.getHeartbeatCountList().containsKey(serverId)) {
+                        serverState.getSuspectList().put(serverId, "SUSPECTED");
+                    }
+                }
+            }
+        }
+
+    }
+
 
 }

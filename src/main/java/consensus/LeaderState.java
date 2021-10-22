@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class LeaderState
 {
-    private int leaderID;
+    private Integer leaderID;
     private final HashMap<String, Integer> activeClients = new HashMap<>(); // <clientID, serverID>
     private final HashMap<String, Room> activeChatRooms = new HashMap<>(); // <roomID, room obj>
 
@@ -71,7 +71,7 @@ public class LeaderState
         }
     }
 
-    public int getLeaderID()
+    public Integer getLeaderID()
     {
         return leaderID;
     }

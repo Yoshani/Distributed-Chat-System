@@ -145,6 +145,7 @@ public class ServerHandlerThread extends Thread {
                         synchronized( lock ) {
                             lock.notify();
                         }
+
                     } else if ( j_object.get("type").equals("deleteroom") ) {
                         String roomID = j_object.get("roomid").toString();
                         // leader removes deleted room from global room list
@@ -156,8 +157,10 @@ public class ServerHandlerThread extends Thread {
                         // leader removes client from global room list
                         LeaderState.getInstance().removeApprovedClient( clientID );
                         System.out.println("INFO : Client '"+ clientID + "' deleted by leader");
+
                     } else if(j_object.get("type").equals("gossip")){
                         GossipJob.receiveMessages(j_object);
+
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

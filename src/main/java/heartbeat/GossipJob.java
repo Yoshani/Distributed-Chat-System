@@ -81,7 +81,7 @@ public class GossipJob implements Runnable{
         if (numOfServers > 1) { // Gossip required at least 2 servers to be up
 
             // after updating the heartbeatCountList, randomly select a server and send
-            Integer serverIndex = ThreadLocalRandom.current().nextInt(numOfServers - 1);
+            int serverIndex = ThreadLocalRandom.current().nextInt(numOfServers - 1);
             ArrayList<Server> remoteServer = new ArrayList<>();
             for (Server server : serverState.getServers().values()) {
                 Integer serverId = server.getServerID();

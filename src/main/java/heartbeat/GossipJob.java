@@ -112,7 +112,7 @@ public class GossipJob implements Runnable{
         ServerState serverState = ServerState.getInstance();
 
         HashMap<Integer, Integer> gossipFromOthers = (HashMap<Integer, Integer>) j_object.get("heartbeatCountList");
-        Integer fromServer = (Integer) j_object.get("serverId");
+        Integer fromServer = (int) (long)j_object.get("serverId");
 
         System.out.println(("Receiving gossip from server: [" + fromServer.toString() + "] gossipping: " + gossipFromOthers));
 

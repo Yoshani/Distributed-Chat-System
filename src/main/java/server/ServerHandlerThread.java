@@ -8,6 +8,7 @@ import consensus.LeaderState;
 import messaging.MessageTransfer;
 import messaging.ServerMessage;
 import org.json.simple.JSONObject;
+import heartbeat.GossipJob;
 
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -144,6 +145,8 @@ public class ServerHandlerThread extends Thread {
                         synchronized( lock ) {
                             lock.notify();
                         }
+                    } else if(j_object.get("type").equals("gossip")){
+                        GossipJob.receiveMessages(j_object);
                     }
                     else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );

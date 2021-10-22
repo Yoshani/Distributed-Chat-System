@@ -18,6 +18,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getHeartbeat( String sender) {
+        // {"option": "heartbeat", "sender": "s1"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "heartbeat");
         jsonObject.put("sender", sender);
@@ -26,6 +27,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getElection(String source) {
+        // {"option": "election", "source": "s1"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "election");
         jsonObject.put("source", source);
@@ -34,6 +36,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getCoordinator(String leader) {
+        // {"option": "coordinator", "leader": "s3"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "coordinator");
         jsonObject.put("leader", leader);
@@ -42,6 +45,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getOk(String sender) {
+        // {"option": "ok", "sender": "s1"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("option", "ok");
         jsonObject.put("sender", sender);
@@ -50,6 +54,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getClientIdApprovalRequest(String clientID, String sender, String threadID) {
+        // {"type" : "clientidapprovalrequest", "clientid" : "Adel", "sender" : "s2", "threadid" : "10"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "clientidapprovalrequest");
         jsonObject.put("clientid", clientID);
@@ -60,6 +65,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getClientIdApprovalReply(String approved, String threadID) {
+        // {"type" : "clientidapprovalreply", "approved" : "1", "threadid" : "10"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "clientidapprovalreply");
         jsonObject.put("approved", approved);
@@ -69,6 +75,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getRoomCreateApprovalRequest(String clientID, String roomID, String sender, String threadID) {
+        // {"type" : "roomcreateapprovalrequest", "clientid" : "Adel", "roomid" : "jokes", "sender" : "s2", "threadid" : "10"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "roomcreateapprovalrequest");
         jsonObject.put("clientid", clientID);
@@ -80,6 +87,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getRoomCreateApprovalReply(String approved, String threadID) {
+        // {"type" : "roomcreateapprovalreply", "approved" : "1", "threadid" : "10"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "roomcreateapprovalreply");
         jsonObject.put("approved", approved);

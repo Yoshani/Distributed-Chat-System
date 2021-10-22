@@ -420,12 +420,12 @@ public class ClientHandlerThread extends Thread {
 
                 messageSend(null, "deleteroom " + roomID + " true", null);
 
-                System.out.println("INFO : "+ clientState.getClientID()+ " is quit");
+                System.out.println("INFO : "+ clientState.getClientID()+ " quit");
 
             } else {
                 ServerState.getInstance().getRoomMap().get(roomID).removeParticipants(clientState);
                 messageSend(socketList, "roomchangeall " + clientState.getClientID() + " " + " " + " " + mainHallRoomID, null);
-                System.out.println("INFO : "+ clientState.getClientID()+ " is quit");
+                System.out.println("INFO : "+ clientState.getClientID()+ " quit");
             }
         } else { // TODO: is this part necessary for quit?
             System.out.println("WARN : Received room ID [" + roomID + "] does not exist");

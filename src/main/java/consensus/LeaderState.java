@@ -62,6 +62,7 @@ public class LeaderState
         activeChatRooms.remove( roomID );
     }
 
+
     public void removeRoomIfClientOwnsRoom(String clientID){
         for( Room room : activeChatRooms.values() ) {
             if( room.getOwnerIdentity().equals( clientID ) ) {

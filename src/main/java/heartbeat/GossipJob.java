@@ -93,7 +93,7 @@ public class GossipJob implements Runnable{
             Collections.shuffle(remoteServer, new Random(System.nanoTime())); // another way of randomize the list
 
             // change concurrent hashmap to hashmap before sending
-            HashMap<Integer, Integer> heartbeatCountList = new HashMap<Integer, Integer>(serverState.getHeartbeatCountList());
+            HashMap<Integer, Integer> heartbeatCountList = new HashMap<>(serverState.getHeartbeatCountList());
             JSONObject gossipMessage = new JSONObject();
             gossipMessage = serverMessage.gossipMessage(serverState.getSelfID(), heartbeatCountList);
             try {

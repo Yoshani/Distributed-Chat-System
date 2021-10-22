@@ -123,4 +123,14 @@ public class ServerMessage
         jsonObject.put("clientid", clientID);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject gossipMessage(Integer serverId, HashMap<Integer, Integer> heartbeatCountList){
+        // {"type":"gossip","serverid":"1","heartbeatcountlist":{"1":0,"2":1,"3":1,"4":2}}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "gossip");
+        jsonObject.put("serverId", serverId);
+        jsonObject.put("heartbeatCountList", heartbeatCountList);
+        return jsonObject;
+    }
 }

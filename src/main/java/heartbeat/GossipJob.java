@@ -49,6 +49,7 @@ public class GossipJob implements Runnable{
 
             if (count != null) {
                 // if heart beat count is more than error factor
+                // TODO: change aliveErrorFactor
                 if (count > aliveErrorFactor) {
                     serverState.getSuspectList().put(serverId, "SUSPECTED");
                 } else {
@@ -80,7 +81,7 @@ public class GossipJob implements Runnable{
         if (numOfServers > 1) { // Gossip required at least 2 servers to be up
 
             // after updating the heartbeatCountList, randomly select a server and send
-            int serverIndex = ThreadLocalRandom.current().nextInt(numOfServers - 1);
+            Integer serverIndex = ThreadLocalRandom.current().nextInt(numOfServers - 1);
             ArrayList<Server> remoteServer = new ArrayList<>();
             for (Server server : serverState.getServers().values()) {
                 Integer serverId = server.getServerID();
@@ -92,7 +93,7 @@ public class GossipJob implements Runnable{
             Collections.shuffle(remoteServer, new Random(System.nanoTime())); // another way of randomize the list
 
             // change concurrent hashmap to hashmap before sending
-            HashMap<Integer, Integer> heartbeatCountList = new HashMap<>(serverState.getHeartbeatCountList());
+            HashMap<Integer, Integer> heartbeatCountList = new HashMap<Integer, Integer>(serverState.getHeartbeatCountList());
             JSONObject gossipMessage = new JSONObject();
             gossipMessage = serverMessage.gossipMessage(serverState.getSelfID(), heartbeatCountList);
             try {
@@ -111,17 +112,17 @@ public class GossipJob implements Runnable{
 
         ServerState serverState = ServerState.getInstance();
 
-        HashMap<Integer, Integer> gossipFromOthers = (HashMap<Integer, Integer>) j_object.get("heartbeatCountList");
+        HashMap<String, Long> gossipFromOthers = (HashMap<String, Long>) j_object.get("heartbeatCountList");
         Integer fromServer = (int) (long)j_object.get("serverId");
 
         System.out.println(("Receiving gossip from server: [" + fromServer.toString() + "] gossipping: " + gossipFromOthers));
 
         //update the heartbeatcountlist by taking minimum
-        for (Integer serverId : gossipFromOthers.keySet()) {
+        for (String serverId : gossipFromOthers.keySet()) {
             Integer localHeartbeatCount = serverState.getHeartbeatCountList().get(serverId);
-            Integer remoteHeartbeatCount = gossipFromOthers.get(serverId);
+            Integer remoteHeartbeatCount = (int) (long)gossipFromOthers.get(serverId);
             if (localHeartbeatCount != null && remoteHeartbeatCount < localHeartbeatCount) {
-                serverState.getHeartbeatCountList().put(serverId, remoteHeartbeatCount);
+                serverState.getHeartbeatCountList().put(Integer.parseInt(serverId), remoteHeartbeatCount);
             }
         }
 
@@ -129,9 +130,9 @@ public class GossipJob implements Runnable{
 
         if (null != LeaderState.getInstance() && LeaderState.getInstance().getLeaderID().equals(serverState.getSelfID())) {
             if (serverState.getHeartbeatCountList().size() < gossipFromOthers.size()) {
-                for (Integer serverId : gossipFromOthers.keySet()) {
+                for (String serverId : gossipFromOthers.keySet()) {
                     if (!serverState.getHeartbeatCountList().containsKey(serverId)) {
-                        serverState.getSuspectList().put(serverId, "SUSPECTED");
+                        serverState.getSuspectList().put(Integer.parseInt(serverId), "SUSPECTED");
                     }
                 }
             }

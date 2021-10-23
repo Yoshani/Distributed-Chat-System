@@ -157,22 +157,13 @@ public class ServerHandlerThread extends Thread {
 
                                 Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
 
-                                String host;
-                                String port;
-                                if (serverOfTargetRoom != null) {
-                                    host = serverOfTargetRoom.getServerAddress();
-                                    port = String.valueOf(serverOfTargetRoom.getClientsPort());
-                                } else {
-                                    host = "_";
-                                    port = "_";
-                                }
+                                String host = serverOfTargetRoom.getServerAddress();
+                                String port = String.valueOf(serverOfTargetRoom.getClientsPort());
 
                                 MessageTransfer.sendServer(
                                         ServerMessage.getJoinRoomApprovalReply(
-                                                String.valueOf(serverIDofTargetRoom!=-1),
-                                                threadID,
-                                                host,
-                                                port),
+                                                String.valueOf(serverIDofTargetRoom != -1),
+                                                threadID, host, port),
                                         destServer
                                 );
                                 System.out.println("INFO : Join Room from [" + formerRoomID +

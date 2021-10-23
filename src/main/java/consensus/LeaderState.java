@@ -2,7 +2,6 @@ package consensus;
 
 import client.ClientState;
 import server.Room;
-import server.Server;
 import server.ServerState;
 
 import java.util.ArrayList;
@@ -107,4 +106,7 @@ public class LeaderState
         this.leaderID = leaderID;
     }
 
+    public ArrayList<String> getRoomIDList() {
+        return new ArrayList<>(this.activeChatRooms.keySet());
+    }
 }

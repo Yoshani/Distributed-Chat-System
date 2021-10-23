@@ -26,10 +26,12 @@ public class ClientHandlerThread extends Thread {
     private ClientState clientState;
     private int approvedClientID = -1;
     private int approvedRoomCreation = -1;
-
     private int approvedJoinRoom = -1;
+
     private String approvedJoinRoomServerHostAddress;
     private String approvedJoinRoomServerPort;
+
+    private List<String> roomsListTemp;
 
     final Object lock;
 
@@ -57,6 +59,10 @@ public class ClientHandlerThread extends Thread {
 
     public void setApprovedJoinRoomServerPort(String approvedJoinRoomServerPort) {
         this.approvedJoinRoomServerPort = approvedJoinRoomServerPort;
+    }
+
+    public void setRoomsListTemp(List<String> roomsListTemp) {
+        this.roomsListTemp = roomsListTemp;
     }
 
     public Object getLock() {
@@ -91,7 +97,7 @@ public class ClientHandlerThread extends Thread {
             sendToClient = ClientMessage.getWho(msgCtx.roomID, msgCtx.participantsList, msgCtx.clientID);//owner
             sendClient(sendToClient,clientSocket);
         } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.LIST)) {
-            sendToClient = ClientMessage.getList(msgCtx.participantsList);
+            sendToClient = ClientMessage.getList(msgCtx.roomsList);
             sendClient(sendToClient,clientSocket);
         } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.DELETE_ROOM)) {
             sendToClient = ClientMessage.getDeleteRoom(msgCtx.roomID, msgCtx.isDeleteRoomApproved);
@@ -192,13 +198,39 @@ public class ClientHandlerThread extends Thread {
     }
 
     //list
-    private void list() throws IOException {
-        //TODO : impl wrong, remove shared attr
-        ClientMessageContext msgCtx = new ClientMessageContext()
-                .setRoomsList(SharedAttributes.getRooms());
+    private void list() throws IOException, InterruptedException {
+        //reset Temp room list
+        roomsListTemp = null;
 
-        System.out.println("INFO : rooms in the system :" + SharedAttributes.getRooms());
-        messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.LIST));
+        while (!LeaderState.getInstance().isLeaderElected()) {
+            Thread.sleep(1000);
+        }
+
+        // if self is leader get list direct from leader state
+        if (LeaderState.getInstance().isLeader()) {
+            roomsListTemp = LeaderState.getInstance().getRoomIDList();
+        } else { // send list request to leader
+            MessageTransfer.sendToLeader(
+                    ServerMessage.getListRequest(
+                            clientState.getClientID(),
+                            String.valueOf(this.getId()),
+                            String.valueOf(ServerState.getInstance().getSelfID()))
+            );
+
+            synchronized (lock) {
+                while (roomsListTemp == null) {
+                    lock.wait(7000);
+                }
+            }
+        }
+
+        if (roomsListTemp != null) {
+            ClientMessageContext msgCtx = new ClientMessageContext()
+                    .setRoomsList(roomsListTemp);
+
+            System.out.println("INFO : Recieved rooms in the system :" + roomsListTemp);
+            messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.LIST));
+        }
     }
 
     //who
@@ -264,10 +296,9 @@ public class ClientHandlerThread extends Thread {
                 System.out.println( "INFO : Received correct room ID :" + newRoomID );
 
                 String formerRoomID = clientState.getRoomID();
-                String former = clientState.getRoomID();
 
-                // list of clients inside MainHall
-                HashMap<String,ClientState> clientList = ServerState.getInstance().getRoomMap().get( former ).getClientStateMap();
+                // list of clients inside former room
+                HashMap<String,ClientState> clientList = ServerState.getInstance().getRoomMap().get( formerRoomID ).getClientStateMap();
 
                 // create broadcast list
                 ArrayList<Socket> formerSocket = new ArrayList<>();
@@ -276,6 +307,7 @@ public class ClientHandlerThread extends Thread {
                     formerSocket.add( clientList.get( each ).getSocket() );
                 }
 
+                //update server state
                 ServerState.getInstance().getRoomMap().get( formerRoomID ).removeParticipants( clientState.getClientID() );
 
                 Room newRoom = new Room( clientState.getClientID(), newRoomID, ServerState.getInstance().getSelfID() );

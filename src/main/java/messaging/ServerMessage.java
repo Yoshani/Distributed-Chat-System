@@ -2,6 +2,8 @@ package messaging;
 
 import org.json.simple.JSONObject;
 
+import java.util.ArrayList;
+
 public class ServerMessage
 {
     @SuppressWarnings("unchecked")
@@ -108,6 +110,25 @@ public class ServerMessage
         jsonObject.put("former", formerRoomID);
         jsonObject.put("clientid", clientID);
         jsonObject.put("threadid", threadID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getListRequest(String clientID, String threadID, String sender) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "listrequest");
+        jsonObject.put("sender", sender);
+        jsonObject.put("clientid", clientID);
+        jsonObject.put("threadid", threadID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getListResponse(ArrayList<String> roomIDList, String threadID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "listresponse");
+        jsonObject.put("threadid", threadID);
+        jsonObject.put("rooms", roomIDList);
         return jsonObject;
     }
 }

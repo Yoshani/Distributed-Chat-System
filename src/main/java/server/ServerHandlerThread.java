@@ -8,11 +8,13 @@ import consensus.BullyAlgorithm;
 import consensus.LeaderState;
 import messaging.MessageTransfer;
 import messaging.ServerMessage;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 
 public class ServerHandlerThread extends Thread {
 
@@ -84,7 +86,7 @@ public class ServerHandlerThread extends Thread {
                         clientHandlerThread.setApprovedClientID( approved );
                         Object lock = clientHandlerThread.getLock();
                         synchronized( lock ) {
-                            lock.notify();
+                            lock.notifyAll();
                         }
 
                     } else if ( j_object.get("type").equals("roomcreateapprovalrequest") ) {
@@ -126,7 +128,7 @@ public class ServerHandlerThread extends Thread {
                         clientHandlerThread.setApprovedRoomCreation( approved );
                         Object lock = clientHandlerThread.getLock();
                         synchronized( lock ) {
-                            lock.notify();
+                            lock.notifyAll();
                         }
                     } else if (j_object.get("type").equals("joinroomapprovalrequest")){
 
@@ -215,7 +217,35 @@ public class ServerHandlerThread extends Thread {
 
                         System.out.println("INFO : Moved Client ["+clientID+"] to server s"+sender
                                 +" and room ["+roomID+"] is updated as current room");
+                    } else if (j_object.get("type").equals("listrequest")) {
+                        //leader process list request
 
+                        //parse params
+                        String clientID = j_object.get("clientid").toString();
+                        String threadID = j_object.get("threadid").toString();
+                        int sender = Integer.parseInt(j_object.get("sender").toString());
+
+                        Server destServer = ServerState.getInstance().getServers().get(sender);
+
+                        MessageTransfer.sendServer(
+                                ServerMessage.getListResponse(LeaderState.getInstance().getRoomIDList(), threadID ),
+                                destServer
+                        );
+                    } else if (j_object.get("type").equals("listresponse")) {
+
+                        Long threadID = Long.parseLong(j_object.get("threadid").toString());
+                        JSONArray roomsJSONArray = (JSONArray) j_object.get("rooms");
+                        ArrayList<String> roomIDList = new ArrayList(roomsJSONArray);
+
+                        ClientHandlerThread clientHandlerThread = ServerState.getInstance()
+                                .getClientHandlerThread(threadID);
+
+                        Object lock = clientHandlerThread.getLock();
+
+                        synchronized (lock){
+                            clientHandlerThread.setRoomsListTemp(roomIDList);
+                            lock.notifyAll();
+                        }
                     } else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );
                     }

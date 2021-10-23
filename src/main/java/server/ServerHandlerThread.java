@@ -33,27 +33,7 @@ public class ServerHandlerThread extends Thread {
 
                 // convert received message to json object
                 JSONObject j_object = MessageTransfer.convertToJson( jsonStringFromServer );
-                int index = 0;
 
-                if (j_object.containsKey("leader") && j_object.containsKey("coordinatoor")) {
-                    index = Integer.parseInt(j_object.get("leader").toString());
-                    SharedAttributes.setNeighbourIndex(index);
-                } else if (j_object.containsKey("sender")){
-                    index = Integer.parseInt(j_object.get("sender").toString());
-                    SharedAttributes.setNeighbourIndex(index);
-                }
-
-                if (MessageTransfer.hasKey( j_object, "room")) {
-                    String rooms =  (String) j_object.get("room");
-                    SharedAttributes sharedAttributes = new SharedAttributes();
-                    sharedAttributes.setRoom(rooms);
-                }
-
-                if (MessageTransfer.hasKey( j_object, "delete-room")) {
-                    String deletedRoom = (String) j_object.get("delete-room");
-                    SharedAttributes sharedAttributes = new SharedAttributes();
-                    sharedAttributes.removeRoomFromGlobalRoomList(deletedRoom);
-                }
 
                 if( MessageTransfer.hasKey( j_object, "option" ) ) {
                     // messages with 'option' tag will be handled inside BullyAlgorithm

@@ -285,8 +285,6 @@ public class ClientHandlerThread extends Thread {
                 clientState.setRoomOwner( true );
                 newRoom.addParticipants( clientState );
 
-                SharedAttributes.addNewRoomToGlobalRoomList(newRoomID, SharedAttributes.getRooms());
-
                 synchronized (clientSocket) { //TODO : check sync | lock on out buffer?
                     ClientMessageContext msgCtx = new ClientMessageContext()
                             .setClientID(clientState.getClientID())
@@ -297,12 +295,6 @@ public class ClientHandlerThread extends Thread {
                     messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.CREATE_ROOM));
                     messageSend(formerSocket, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
                 }
-
-                int index = SharedAttributes.getNeighbourIndex();
-                Server destServer = ServerState.getInstance().getServers().get(index);
-                JSONObject obj=new JSONObject();
-                obj.put("room",newRoomID); //////   use this for delete room function.
-                MessageTransfer.sendRooms( obj,destServer);
 
             } else if ( approvedRoomCreation == 0 ) {
                 ClientMessageContext msgCtx = new ClientMessageContext()

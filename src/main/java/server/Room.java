@@ -12,8 +12,8 @@ public class Room {
     private final HashMap<String,ClientState> clientStateMap = new HashMap<>();  //<clientID,clientState>
 
     //TODO : check sync keyword
-    public Room(String identity, String roomID, int serverID) {
-        this.ownerID = identity;
+    public Room(String ownerID, String roomID, int serverID) {
+        this.ownerID = ownerID;
         this.roomID = roomID;
         this.serverID = serverID;
     }

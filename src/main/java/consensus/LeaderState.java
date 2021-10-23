@@ -51,9 +51,14 @@ public class LeaderState
         activeChatRooms.get(client.getRoomID()).addParticipants(client);
     }
 
-    public void removeClient(ClientState client) {
-        activeClientsList.remove(client.getClientID());
-        activeChatRooms.get(client.getRoomID()).removeParticipants(client);
+    public void removeClient(String clientID, String formerRoomID) {
+        activeClientsList.remove(clientID);
+        activeChatRooms.get(formerRoomID).removeParticipants(clientID);
+    }
+
+    public void localJoinRoomClient(ClientState clientState, String formerRoomID) {
+        removeClient(clientState.getClientID(), formerRoomID);
+        addClient(clientState);
     }
 
     public boolean isRoomCreationApproved( String roomID ) {
@@ -102,9 +107,4 @@ public class LeaderState
         this.leaderID = leaderID;
     }
 
-    public void removeJoinReqApprovedClientFromRoom(String clientID, String formerRoomID, int serverID) {
-        this.activeClientsList.remove(clientID);
-        HashMap clientStateMap = this.activeChatRooms.get(formerRoomID).getClientStateMap();
-        if (clientStateMap != null) clientStateMap.remove(clientID);
-    }
 }

@@ -34,8 +34,8 @@ public class Room {
         this.clientStateMap.put(clientState.getClientID(), clientState);
     }
 
-    public synchronized void removeParticipants(ClientState clientState) {
-        this.clientStateMap.remove(clientState.getClientID());
+    public synchronized void removeParticipants(String clientID) {
+        this.clientStateMap.remove(clientID);
     }
 
     public String getOwnerIdentity() {

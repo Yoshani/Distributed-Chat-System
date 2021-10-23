@@ -276,7 +276,7 @@ public class ClientHandlerThread extends Thread {
                     formerSocket.add( clientList.get( each ).getSocket() );
                 }
 
-                ServerState.getInstance().getRoomMap().get( formerRoomID ).removeParticipants( clientState );
+                ServerState.getInstance().getRoomMap().get( formerRoomID ).removeParticipants( clientState.getClientID() );
 
                 Room newRoom = new Room( clientState.getClientID(), newRoomID, ServerState.getInstance().getSelfID() );
                 ServerState.getInstance().getRoomMap().put( newRoomID, newRoom );
@@ -331,7 +331,7 @@ public class ClientHandlerThread extends Thread {
         } else if (ServerState.getInstance().getRoomMap().containsKey(roomID)) { //local room change
             //TODO : check sync
             clientState.setRoomID(roomID);
-            ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
+            ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState.getClientID());
             ServerState.getInstance().getRoomMap().get(roomID).addParticipants(clientState);
 
             System.out.println("INFO : client [" + clientState.getClientID() + "] joined room :" + roomID);
@@ -402,7 +402,7 @@ public class ClientHandlerThread extends Thread {
             if (approvedJoinRoom == 1) {
 
                 //broadcast to former room
-                ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
+                ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState.getClientID());
                 System.out.println("INFO : client [" + clientState.getClientID() + "] left room :" + formerRoomID);
 
                 //create broadcast list
@@ -425,7 +425,7 @@ public class ClientHandlerThread extends Thread {
 
                 //server change : route
                 messageSend(SocketList,  msgCtx.setMessageType(CLIENT_MSG_TYPE.ROUTE));
-                System.out.println("INFO : " + msgCtx.toString());
+                System.out.println("INFO : Route Message Sent to Client");
 
 
             } else if (approvedJoinRoom == 0) { // Room not found on system
@@ -434,7 +434,7 @@ public class ClientHandlerThread extends Thread {
                         .setRoomID(formerRoomID)       //same
                         .setFormerRoomID(formerRoomID);//same
 
-                System.out.println("WARN : Received room ID "+roomID + "does not exist");
+                System.out.println("WARN : Received room ID ["+roomID + "] does not exist");
                 messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.JOIN_ROOM));
             }
 
@@ -464,8 +464,8 @@ public class ClientHandlerThread extends Thread {
                 .setIsServerChangeApproved("true")
                 .setApprovedServerID(ServerState.getInstance().getServerID());
 
-        messageSend(SocketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
         messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.SERVER_CHANGE));
+        messageSend(SocketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
 
 
         //TODO : check sync
@@ -611,7 +611,7 @@ public class ClientHandlerThread extends Thread {
                         .setFormerRoomID(roomID)
                         .setIsDeleteRoomApproved("true");
 
-                ServerState.getInstance().getRoomMap().get(roomID).removeParticipants(clientState);
+                ServerState.getInstance().getRoomMap().get(roomID).removeParticipants(clientState.getClientID());
                 messageSend(socketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
 
                 System.out.println("INFO : "+ clientState.getClientID()+ " is quit");

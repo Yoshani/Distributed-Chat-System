@@ -141,13 +141,14 @@ public class ServerHandlerThread extends Thread {
                         boolean isLocalRoomChange = Boolean.parseBoolean(j_object.get("isLocalRoomChange").toString());
 
                         if (isLocalRoomChange) {
-                            //local change
-                            LeaderState.getInstance().removeJoinReqApprovedClientFromRoom(clientID, formerRoomID, sender);
+                            //local change update leader
+                            ClientState clientState = new ClientState(clientID,roomID, null);
+                            LeaderState.getInstance().localJoinRoomClient(clientState, formerRoomID);
                         } else {
                             int serverIDofTargetRoom = LeaderState.getInstance().getServerIdIfRoomExist(roomID);
 
                             if (serverIDofTargetRoom != -1) {
-                                LeaderState.getInstance().removeJoinReqApprovedClientFromRoom(clientID, formerRoomID, sender);
+                                LeaderState.getInstance().removeClient(clientID,formerRoomID);//remove before route, later add on move join
                             }
                             Server destServer = ServerState.getInstance().getServers().get(sender);
                             try {
@@ -166,7 +167,7 @@ public class ServerHandlerThread extends Thread {
 
                                 MessageTransfer.sendServer(
                                         ServerMessage.getJoinRoomApprovalReply(
-                                                String.valueOf(serverIDofTargetRoom),
+                                                String.valueOf(serverIDofTargetRoom!=-1),
                                                 threadID,
                                                 host,
                                                 port),

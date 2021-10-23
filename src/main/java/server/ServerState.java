@@ -71,8 +71,8 @@ public class ServerState {
         // set number of servers with higher ids
         numberOfServersWithHigherIds = servers.size() - selfID;
 
-        this.mainHall = new Room("default-" + serverID, getMainHallID(), selfID);
-        this.roomMap.put(getMainHallID(), mainHall); // TODO: owner id of mainhall should be ""
+        this.mainHall = new Room("", getMainHallID(), selfID);
+        this.roomMap.put(getMainHallID(), mainHall);
 
     }
 

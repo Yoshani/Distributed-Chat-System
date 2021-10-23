@@ -2,14 +2,18 @@ package consensus;
 
 import client.ClientState;
 import server.Room;
+import server.Server;
 import server.ServerState;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class LeaderState
 {
     private int leaderID;
-    private final HashMap<String, Integer> activeClients = new HashMap<>(); // <clientID, serverID>
+
+    private final List<String> activeClientsList = new ArrayList<>();
     private final HashMap<String, Room> activeChatRooms = new HashMap<>(); // <roomID, room obj>
 
     // singleton
@@ -23,6 +27,7 @@ public class LeaderState
             synchronized (LeaderState.class) {
                 if (leaderStateInstance == null) {
                     leaderStateInstance = new LeaderState(); //instance will be created at request time
+                    leaderStateInstance.addServerDefaultMainHalls();
                 }
             }
         }
@@ -37,16 +42,18 @@ public class LeaderState
         return BullyAlgorithm.leaderFlag;
     }
 
-    public boolean isClientIDAlreadyTaken(String clientID){
-        return activeClients.containsKey( clientID );
+    public boolean isClientIDAlreadyTaken(String clientID) {
+        return activeClientsList.contains(clientID);
     }
 
-    public void addApprovedClient(String clientID, int serverID) {
-        activeClients.put( clientID, serverID );
+    public void addClient(ClientState client) {
+        activeClientsList.add(client.getClientID());
+        activeChatRooms.get(client.getRoomID()).addParticipants(client);
     }
 
-    public void removeApprovedClient(String clientID) {
-        activeClients.remove( clientID );
+    public void removeClient(ClientState client) {
+        activeClientsList.remove(client.getClientID());
+        activeChatRooms.get(client.getRoomID()).removeParticipants(client);
     }
 
     public boolean isRoomCreationApproved( String roomID ) {
@@ -54,15 +61,24 @@ public class LeaderState
     }
 
     public void addApprovedRoom(String clientID, String roomID, int serverID) {
-        Room room = new Room( clientID, roomID, serverID );
-        activeChatRooms.put( roomID, room );
+        Room room = new Room(clientID, roomID, serverID);
+        activeChatRooms.put(roomID, room);
+
+        //add client to the new room
+        ClientState clientState = new ClientState(clientID, roomID, null);
+        room.addParticipants(clientState);
     }
 
-    public void addClientToRoomID(ClientState client, String roomID){
-        this.activeChatRooms.get(roomID).getClientStateMap().put(client.getClientID(),client);
+    public void addServerDefaultMainHalls(){
+        ServerState.getInstance().getServers()
+                .forEach((serverID, server) -> {
+                    String roomID = ServerState.getMainHallIDbyServerInt(serverID);
+                    this.activeChatRooms.put(roomID, new Room("", roomID, serverID));
+                });
     }
 
     public void removeApprovedRoom(String roomID) {
+        //TODO : move clients already in room (update server state) on delete
         activeChatRooms.remove( roomID );
     }
 
@@ -87,7 +103,7 @@ public class LeaderState
     }
 
     public void removeJoinReqApprovedClientFromRoom(String clientID, String formerRoomID, int serverID) {
-        this.activeClients.remove(clientID);
+        this.activeClientsList.remove(clientID);
         HashMap clientStateMap = this.activeChatRooms.get(formerRoomID).getClientStateMap();
         if (clientStateMap != null) clientStateMap.remove(clientID);
     }

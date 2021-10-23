@@ -52,7 +52,10 @@ public class ServerHandlerThread extends Thread {
 
                         boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
                         if( approved ) {
-                            LeaderState.getInstance().addApprovedClient( clientID, sender );
+                            ClientState clientState = new ClientState(clientID,
+                                    ServerState.getMainHallIDbyServerInt(sender),
+                                    null);
+                            LeaderState.getInstance().addClient(clientState);
                         }
                         Server destServer = ServerState.getInstance().getServers()
                                 .get( sender );
@@ -207,8 +210,7 @@ public class ServerHandlerThread extends Thread {
                         String threadID = j_object.get("threadid").toString();
 
                         ClientState client = new ClientState(clientID,roomID,null);
-                        LeaderState.getInstance().addApprovedClient(clientID, sender);
-                        LeaderState.getInstance().addClientToRoomID(client,roomID);
+                        LeaderState.getInstance().addClient(client);
 
                         System.out.println("INFO : Moved Client ["+clientID+"] to server s"+sender
                                 +" and room ["+roomID+"] is updated as current room");

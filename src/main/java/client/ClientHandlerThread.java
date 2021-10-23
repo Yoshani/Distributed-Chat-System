@@ -79,10 +79,11 @@ public class ClientHandlerThread extends Thread {
         } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.ROUTE)) {
             sendToClient = ClientMessage.getRoute(msgCtx.roomID, msgCtx.targetHost, msgCtx.targetPort);
             sendClient(sendToClient, clientSocket);
-//        } else if (messageCtx.messageType.equals(CLIENT_MSG_TYPE.MOVE_JOIN)) {
-//            sendToClient = ClientMessage.getMoveJoin(array[1], array[2], array[3]);
-//            sendClient(sendToClient, clientSocket);
-//            if (socketList != null) sendBroadcast(sendToClient, socketList);
+        } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.MOVE_JOIN)) {
+            sendToClient = ClientMessage.getServerChange(msgCtx.isServerChangeApproved, msgCtx.approvedServerID);
+            sendClient(sendToClient, clientSocket);
+            //TODO: do the coherent functions like room change broadcast in same line
+            //if (socketList != null) sendBroadcast(sendToClient, socketList);
         }
         else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.CREATE_ROOM)) {
             sendToClient = ClientMessage.getCreateRoom(msgCtx.roomID, msgCtx.isNewRoomIdApproved);
@@ -491,7 +492,8 @@ public class ClientHandlerThread extends Thread {
                             String.valueOf(this.getId())
                     )
             );
-        } else {
+        }
+        else {
             //room missing : place in main hall
             this.clientState = new ClientState( clientID, "MainHall-"+ServerState.getInstance().getServerID(), clientSocket );
             ServerState.getInstance().getRoomMap().get("MainHall-"+ServerState.getInstance().getServerID()).addParticipants( clientState );

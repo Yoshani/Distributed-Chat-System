@@ -41,6 +41,15 @@ public class ClientMessage
     }
 
     @SuppressWarnings("unchecked")
+    public static JSONObject getServerChange(String approved, String serverid) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "serverchange");
+        jsonObject.put("approved", approved);
+        jsonObject.put("serverid", serverid);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
     public static JSONObject getCreateRoom(String roomID, String approve) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "createroom");

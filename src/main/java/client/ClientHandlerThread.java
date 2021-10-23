@@ -103,7 +103,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //new identity
-    private void newID(String clientID, String jsonStringFromClient) throws IOException, InterruptedException
+    private void newID(String clientID) throws IOException, InterruptedException
     {
         if (checkID(clientID)) {
             // busy wait until leader is elected
@@ -142,7 +142,7 @@ public class ClientHandlerThread extends Thread {
             }
 
             if( approvedClientID == 1 ) {
-                System.out.println( "INFO : Received correct ID ::" + jsonStringFromClient );
+                System.out.println( "INFO : Received correct ID :" + clientID );
                 this.clientState = new ClientState( clientID, ServerState.getInstance().getMainHall().getRoomID(), clientSocket );
                 ServerState.getInstance().getMainHall().addParticipants( clientState );
 
@@ -192,7 +192,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //list
-    private void list(String jsonStringFromClient) throws IOException {
+    private void list() throws IOException {
         //TODO : impl wrong, remove shared attr
         ClientMessageContext msgCtx = new ClientMessageContext()
                 .setRoomsList(SharedAttributes.getRooms());
@@ -202,7 +202,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //who
-    private void who(String jsonStringFromClient) throws IOException {
+    private void who() throws IOException {
         String roomID = clientState.getRoomID();
         Room room = ServerState.getInstance().getRoomMap().get(roomID);
         HashMap<String, ClientState> clientStateMap = room.getClientStateMap();
@@ -219,7 +219,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //create room
-    private void createRoom(String newRoomID, String jsonStringFromClient) throws IOException, InterruptedException
+    private void createRoom(String newRoomID) throws IOException, InterruptedException
     {
         if (checkID(newRoomID) && !clientState.isRoomOwner()) {
             // busy wait until leader is elected
@@ -261,7 +261,7 @@ public class ClientHandlerThread extends Thread {
                 }
             }
             if( approvedRoomCreation == 1) {
-                System.out.println( "INFO : Received correct room ID ::" + jsonStringFromClient );
+                System.out.println( "INFO : Received correct room ID :" + newRoomID );
 
                 String formerRoomID = clientState.getRoomID();
                 String former = clientState.getRoomID();
@@ -324,7 +324,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //join room
-    private void joinRoom(String roomID, String jsonStringFromClient) throws IOException, InterruptedException {
+    private void joinRoom(String roomID) throws IOException, InterruptedException {
         String formerRoomID = clientState.getRoomID();
 
         //local room change
@@ -451,7 +451,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //Move join
-    private void moveJoin(String roomID, String formerRoomID, String clientID, String jsonStringFromClient) throws IOException, InterruptedException {
+    private void moveJoin(String roomID, String formerRoomID, String clientID) throws IOException, InterruptedException {
         roomID = (ServerState.getInstance().getRoomMap().containsKey(roomID))? roomID:ServerState.getInstance().getMainHallID();
         this.clientState = new ClientState(clientID, roomID, clientSocket);
         ServerState.getInstance().getRoomMap().get(roomID).addParticipants(clientState);
@@ -492,7 +492,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //Delete room
-    private void deleteRoom(String roomID, Socket connected, String jsonStringFromClient) throws IOException {
+    private void deleteRoom(String roomID) throws IOException {
 
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
@@ -561,7 +561,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //quit room
-    private void quit(Socket connected,String jsonStringFromClient) throws IOException {
+    private void quit() throws IOException {
 
         String roomID = clientState.getRoomID();
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
@@ -634,7 +634,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //message
-    private void message(String content, Socket connected, String fromclient) throws IOException {
+    private void message(String content) throws IOException {
         String clientID = clientState.getClientID();
         String roomid = clientState.getRoomID();
 
@@ -684,38 +684,38 @@ public class ClientHandlerThread extends Thread {
                         //check new identity format
                         if (j_object.get("type").equals("newidentity") && j_object.get("identity") != null) {
                             String newClientID = j_object.get("identity").toString();
-                            newID(newClientID, jsonStringFromClient);
+                            newID(newClientID);
                         } //check create room
                         if (j_object.get("type").equals("createroom") && j_object.get("roomid") != null) {
                             String newRoomID = j_object.get("roomid").toString();
-                            createRoom(newRoomID, jsonStringFromClient);
+                            createRoom(newRoomID);
                         } //check who
                         if (j_object.get("type").equals("who")) {
-                            who(jsonStringFromClient);
+                            who();
                         } //check list
                         if (j_object.get("type").equals("list")) {
-                            list(jsonStringFromClient);
+                            list();
                         } //check join room
                         if (j_object.get("type").equals("joinroom")) {
                             String roomID = j_object.get("roomid").toString();
-                            joinRoom(roomID, jsonStringFromClient);
+                            joinRoom(roomID);
                         } //check move join
                         if (j_object.get("type").equals("movejoin")) {
                             String roomID = j_object.get("roomid").toString();
                             String formerRoomID = j_object.get("former").toString();
                             String clientID = j_object.get("identity").toString();
-                            moveJoin(roomID, formerRoomID, clientID, jsonStringFromClient);
+                            moveJoin(roomID, formerRoomID, clientID);
                         } //check delete room
                         if (j_object.get("type").equals("deleteroom")) {
                             String roomID = j_object.get("roomid").toString();
-                            deleteRoom(roomID, clientSocket,jsonStringFromClient);
+                            deleteRoom(roomID);
                         } //check message
                         if (j_object.get("type").equals("message")) {
                             String content = j_object.get("content").toString();
-                            message(content, clientSocket, jsonStringFromClient);
+                            message(content);
                         } //check quit
                         if (j_object.get("type").equals("quit")) {
-                            quit(clientSocket,jsonStringFromClient);
+                            quit();
                         }
                     } else {
                         System.out.println("WARN : Command error, Corrupted JSON");

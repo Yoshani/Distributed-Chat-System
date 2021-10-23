@@ -327,8 +327,16 @@ public class ClientHandlerThread extends Thread {
     private void joinRoom(String roomID) throws IOException, InterruptedException {
         String formerRoomID = clientState.getRoomID();
 
-        //local room change
-        if (!clientState.isRoomOwner() && ServerState.getInstance().getRoomMap().containsKey(roomID)) {
+        if (clientState.isRoomOwner()) { //already owns a room
+            ClientMessageContext msgCtx = new ClientMessageContext()
+                    .setClientID(clientState.getClientID())
+                    .setRoomID(formerRoomID)       //same
+                    .setFormerRoomID(formerRoomID);//same
+
+            System.out.println("WARN : Join room denied, Client" + clientState.getClientID() + " Owns a room");
+            messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.JOIN_ROOM));
+
+        } else if (ServerState.getInstance().getRoomMap().containsKey(roomID)) { //local room change
             //TODO : check sync
             clientState.setRoomID(roomID);
             ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
@@ -355,7 +363,6 @@ public class ClientHandlerThread extends Thread {
 
             messageSend(SocketList,  msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
 
-            //TODO : check sync
             while (!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
@@ -370,16 +377,15 @@ public class ClientHandlerThread extends Thread {
                             String.valueOf(true)
                     )
             );
+        } else { //global room change
 
-        } else if (!clientState.isRoomOwner()) { //global room change
-            //TODO : check sync
             while (!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
 
             //reset flag
             approvedJoinRoom = -1;
-            //check is room id exists
+            //check if room id exist and if init route
             MessageTransfer.sendToLeader(
                     ServerMessage.getJoinRoomRequest(
                             clientState.getClientID(),
@@ -391,13 +397,19 @@ public class ClientHandlerThread extends Thread {
                     )
             );
 
-            while (approvedJoinRoom == -1) {
-                //wait for response
+            synchronized (lock){
+                while (approvedJoinRoom == -1) {
+                    System.out.println("INFO : Wait until server approve route on Join room request");
+                    lock.wait(7000);
+                    //wait for response
+                }
             }
 
+            System.out.println("INFO : Received response for route request for join room");
+
             if (approvedJoinRoom == 1) {
-                //update new server : diff route ServerState.getInstance().getRoomMap().get(roomID).addParticipants(clientState);
-                //broadcast to both rooms
+
+                //broadcast to former room
                 ServerState.getInstance().getRoomMap().get(formerRoomID).removeParticipants(clientState);
                 System.out.println("INFO : client [" + clientState.getClientID() + "] left room :" + formerRoomID);
 
@@ -424,29 +436,18 @@ public class ClientHandlerThread extends Thread {
                 System.out.println("INFO : " + msgCtx.toString());
 
 
-            } else if (approvedJoinRoom == 0) {
+            } else if (approvedJoinRoom == 0) { // Room not found on system
                 ClientMessageContext msgCtx = new ClientMessageContext()
                         .setClientID(clientState.getClientID())
                         .setRoomID(formerRoomID)       //same
                         .setFormerRoomID(formerRoomID);//same
 
-                System.out.println("WARN : Received room ID does not exist");
-                messageSend(null,  msgCtx.setMessageType(CLIENT_MSG_TYPE.JOIN_ROOM));
+                System.out.println("WARN : Received room ID "+roomID + "does not exist");
+                messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.JOIN_ROOM));
             }
 
             //reset flag
             approvedJoinRoom = -1;
-
-        } else {
-            //already owns a room
-
-            ClientMessageContext msgCtx = new ClientMessageContext()
-                    .setClientID(clientState.getClientID())
-                    .setRoomID(formerRoomID)       //same
-                    .setFormerRoomID(formerRoomID);//same
-
-            System.out.println("WARN : Join room denied, Client" + clientState.getClientID() + " Owns a room");
-            messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.JOIN_ROOM));
         }
     }
 

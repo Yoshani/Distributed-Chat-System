@@ -206,14 +206,16 @@ public class ServerHandlerThread extends Thread {
 
                         ClientHandlerThread clientHandlerThread = ServerState.getInstance()
                                 .getClientHandlerThread(threadID);
-                        clientHandlerThread.setApprovedJoinRoom(approved);
-                        clientHandlerThread.setApprovedJoinRoomServerHostAddress(host);
-                        clientHandlerThread.setApprovedJoinRoomServerPort(port);
-                        //TODO check if lock required
-                        //Object lock = clientHandlerThread.getLock();
-                        //synchronized( lock ) {
-                        //    lock.notify();
-                        //}
+
+                        Object lock = clientHandlerThread.getLock();
+
+                        synchronized (lock){
+                            clientHandlerThread.setApprovedJoinRoom(approved);
+                            clientHandlerThread.setApprovedJoinRoomServerHostAddress(host);
+                            clientHandlerThread.setApprovedJoinRoomServerPort(port);
+                            lock.notifyAll();
+                        }
+
                     }else if(j_object.get("type").equals("movejoinack")) {
                         //leader process move join acknowledgement from the target room server after change
 

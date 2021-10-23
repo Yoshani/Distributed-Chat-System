@@ -138,6 +138,6 @@ public class ServerState {
     }
 
     public static String getMainHallIDbyServerInt(int server){
-        return "MainHall-"+ server;
+        return "MainHall-s"+ server;
     }
 }

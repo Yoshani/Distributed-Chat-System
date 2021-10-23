@@ -11,14 +11,11 @@ import server.*;
 import messaging.ClientMessage;
 
 import java.io.*;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.rmi.Naming;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Arrays;
 
 import static messaging.ClientMessageContext.CLIENT_MSG_TYPE;
 import static messaging.MessageTransfer.*;
@@ -38,7 +35,6 @@ public class ClientHandlerThread extends Thread {
 
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
-        ServerState.getInstance().getRoomMap().put("MainHall-" + serverID, ServerState.getInstance().getMainHall());
         this.clientSocket = clientSocket;
         this.lock = new Object();
     }
@@ -79,7 +75,7 @@ public class ClientHandlerThread extends Thread {
         } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.ROUTE)) {
             sendToClient = ClientMessage.getRoute(msgCtx.roomID, msgCtx.targetHost, msgCtx.targetPort);
             sendClient(sendToClient, clientSocket);
-        } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.MOVE_JOIN)) {
+        } else if (msgCtx.messageType.equals(CLIENT_MSG_TYPE.SERVER_CHANGE)) {
             sendToClient = ClientMessage.getServerChange(msgCtx.isServerChangeApproved, msgCtx.approvedServerID);
             sendClient(sendToClient, clientSocket);
             //TODO: do the coherent functions like room change broadcast in same line
@@ -168,8 +164,7 @@ public class ClientHandlerThread extends Thread {
                         .setClientID(clientID)
                         .setIsNewClientIdApproved("true")
                         .setFormerRoomID("")
-                        .setRoomID(mainHallRoomID)
-                        .setCurrentServerID("MainHall-"+ServerState.getInstance().getServerID());
+                        .setRoomID(mainHallRoomID);
 
                 synchronized( clientSocket )
                 {
@@ -457,78 +452,43 @@ public class ClientHandlerThread extends Thread {
 
     //Move join
     private void moveJoin(String roomID, String formerRoomID, String clientID, String jsonStringFromClient) throws IOException, InterruptedException {
-        if (ServerState.getInstance().getRoomMap().containsKey(roomID)){
-            this.clientState = new ClientState( clientID, roomID, clientSocket );
-            ServerState.getInstance().getRoomMap().get(roomID).addParticipants( clientState );
+        roomID = (ServerState.getInstance().getRoomMap().containsKey(roomID))? roomID:ServerState.getInstance().getMainHallID();
+        this.clientState = new ClientState(clientID, roomID, clientSocket);
+        ServerState.getInstance().getRoomMap().get(roomID).addParticipants(clientState);
 
-            // TODO on new server :
-            //create broadcast list
-            HashMap<String, ClientState> clientListNew = ServerState.getInstance().getRoomMap().get(roomID).getClientStateMap();
+        //create broadcast list
+        HashMap<String, ClientState> clientListNew = ServerState.getInstance().getRoomMap().get(roomID).getClientStateMap();
 
-            ArrayList<Socket> SocketList = new ArrayList<>();
-            for (String each : clientListNew.keySet()) {
-                SocketList.add(clientListNew.get(each).getSocket());
-            }
-
-            ClientMessageContext msgCtx = new ClientMessageContext()
-                    .setClientID(clientState.getClientID())
-                    .setRoomID(roomID)
-                    .setFormerRoomID(formerRoomID);
-
-            messageSend(SocketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
-
-
-            //TODO : check sync
-            while (!LeaderState.getInstance().isLeaderElected()) {
-                Thread.sleep(1000);
-            }
-            //update leader server
-            MessageTransfer.sendToLeader(
-                    ServerMessage.getMoveJoinRequest(
-                            clientState.getClientID(),
-                            roomID,
-                            formerRoomID,
-                            String.valueOf(ServerState.getInstance().getSelfID()),
-                            String.valueOf(this.getId())
-                    )
-            );
+        ArrayList<Socket> SocketList = new ArrayList<>();
+        for (String each : clientListNew.keySet()) {
+            SocketList.add(clientListNew.get(each).getSocket());
         }
-        else {
-            //room missing : place in main hall
-            this.clientState = new ClientState( clientID, "MainHall-"+ServerState.getInstance().getServerID(), clientSocket );
-            ServerState.getInstance().getRoomMap().get("MainHall-"+ServerState.getInstance().getServerID()).addParticipants( clientState );
 
-            // TODO on new server :
-            //create broadcast list
-            HashMap<String, ClientState> clientListNew = ServerState.getInstance().getRoomMap().get("MainHall-"+ServerState.getInstance().getServerID()).getClientStateMap();
+        ClientMessageContext msgCtx = new ClientMessageContext()
+                .setClientID(clientState.getClientID())
+                .setRoomID(roomID)
+                .setFormerRoomID(formerRoomID)
+                .setIsServerChangeApproved("true")
+                .setApprovedServerID(ServerState.getInstance().getServerID());
 
-            ArrayList<Socket> SocketList = new ArrayList<>();
-            for (String each : clientListNew.keySet()) {
-                SocketList.add(clientListNew.get(each).getSocket());
-            }
+        messageSend(SocketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
+        messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.SERVER_CHANGE));
 
-            ClientMessageContext msgCtx = new ClientMessageContext()
-                    .setClientID(clientState.getClientID())
-                    .setRoomID("MainHall-"+ServerState.getInstance().getServerID())
-                    .setFormerRoomID(formerRoomID);
 
-            messageSend(SocketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.BROADCAST_JOIN_ROOM));
-
-            //TODO : check sync
-            while (!LeaderState.getInstance().isLeaderElected()) {
-                Thread.sleep(1000);
-            }
-            //update leader server
-            MessageTransfer.sendToLeader(
-                    ServerMessage.getMoveJoinRequest(
-                            clientState.getClientID(),
-                            "MainHall-"+ServerState.getInstance().getServerID(),
-                            formerRoomID,
-                            String.valueOf(ServerState.getInstance().getSelfID()),
-                            String.valueOf(this.getId())
-                    )
-            );
+        //TODO : check sync
+        while (!LeaderState.getInstance().isLeaderElected()) {
+            Thread.sleep(1000);
         }
+        //update leader server
+        MessageTransfer.sendToLeader(
+                ServerMessage.getMoveJoinRequest(
+                        clientState.getClientID(),
+                        roomID,
+                        formerRoomID,
+                        String.valueOf(ServerState.getInstance().getSelfID()),
+                        String.valueOf(this.getId())
+                )
+        );
     }
 
     //Delete room

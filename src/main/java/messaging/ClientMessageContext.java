@@ -13,7 +13,7 @@ public class ClientMessageContext {
         JOIN_ROOM,//roomchange
         BROADCAST_JOIN_ROOM,//roomchangeall
         ROUTE,
-        MOVE_JOIN,
+        SERVER_CHANGE,
         DELETE_ROOM,
         QUIT
     }

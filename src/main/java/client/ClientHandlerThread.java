@@ -152,6 +152,11 @@ public class ClientHandlerThread extends Thread {
                 this.clientState = new ClientState( clientID, ServerState.getInstance().getMainHall().getRoomID(), clientSocket );
                 ServerState.getInstance().getMainHall().addParticipants( clientState );
 
+                //update if self is leader
+                if (LeaderState.getInstance().isLeader()) {
+                    LeaderState.getInstance().addClient(new ClientState( clientID, clientState.getRoomID(), null ));
+                }
+
                 // create broadcast list
                 String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
                 HashMap<String,ClientState> mainHallClientList = ServerState.getInstance()
@@ -396,17 +401,24 @@ public class ClientHandlerThread extends Thread {
             while (!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
-            //update leader server
-            MessageTransfer.sendToLeader(
-                    ServerMessage.getJoinRoomRequest(
-                            clientState.getClientID(),
-                            roomID,
-                            formerRoomID,
-                            String.valueOf(ServerState.getInstance().getSelfID()),
-                            String.valueOf(this.getId()),
-                            String.valueOf(true)
-                    )
-            );
+
+            // if self is leader update leader state directly
+            if (LeaderState.getInstance().isLeader()) {
+                LeaderState.getInstance().localJoinRoomClient(clientState, formerRoomID);
+            } else {
+                //update leader server
+                MessageTransfer.sendToLeader(
+                        ServerMessage.getJoinRoomRequest(
+                                clientState.getClientID(),
+                                roomID,
+                                formerRoomID,
+                                String.valueOf(ServerState.getInstance().getSelfID()),
+                                String.valueOf(this.getId()),
+                                String.valueOf(true)
+                        )
+                );
+            }
+
         } else { //global room change
 
             while (!LeaderState.getInstance().isLeaderElected()) {
@@ -416,26 +428,37 @@ public class ClientHandlerThread extends Thread {
             //reset flag
             approvedJoinRoom = -1;
             //check if room id exist and if init route
-            MessageTransfer.sendToLeader(
-                    ServerMessage.getJoinRoomRequest(
-                            clientState.getClientID(),
-                            roomID,
-                            formerRoomID,
-                            String.valueOf(ServerState.getInstance().getSelfID()),
-                            String.valueOf(this.getId()),
-                            String.valueOf(false)
-                    )
-            );
+            if (LeaderState.getInstance().isLeader()) {
+                int serverIDofTargetRoom = LeaderState.getInstance().getServerIdIfRoomExist(roomID);
+                Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
 
-            synchronized (lock){
-                while (approvedJoinRoom == -1) {
-                    System.out.println("INFO : Wait until server approve route on Join room request");
-                    lock.wait(7000);
-                    //wait for response
+                approvedJoinRoom = serverIDofTargetRoom != -1 ? 1 : 0;
+                approvedJoinRoomServerHostAddress = serverOfTargetRoom.getServerAddress();
+                approvedJoinRoomServerPort = String.valueOf(serverOfTargetRoom.getClientsPort());
+                System.out.println("INFO : Received response for route request for join room (Self is Leader)");
+
+            } else {
+                MessageTransfer.sendToLeader(
+                        ServerMessage.getJoinRoomRequest(
+                                clientState.getClientID(),
+                                roomID,
+                                formerRoomID,
+                                String.valueOf(ServerState.getInstance().getSelfID()),
+                                String.valueOf(this.getId()),
+                                String.valueOf(false)
+                        )
+                );
+
+                synchronized (lock) {
+                    while (approvedJoinRoom == -1) {
+                        System.out.println("INFO : Wait until server approve route on Join room request");
+                        lock.wait(7000);
+                        //wait for response
+                    }
                 }
-            }
 
-            System.out.println("INFO : Received response for route request for join room");
+                System.out.println("INFO : Received response for route request for join room");
+            }
 
             if (approvedJoinRoom == 1) {
 
@@ -510,16 +533,24 @@ public class ClientHandlerThread extends Thread {
         while (!LeaderState.getInstance().isLeaderElected()) {
             Thread.sleep(1000);
         }
-        //update leader server
-        MessageTransfer.sendToLeader(
-                ServerMessage.getMoveJoinRequest(
-                        clientState.getClientID(),
-                        roomID,
-                        formerRoomID,
-                        String.valueOf(ServerState.getInstance().getSelfID()),
-                        String.valueOf(this.getId())
-                )
-        );
+
+        //if self is leader update leader state directly
+        if (LeaderState.getInstance().isLeader()) {
+            ClientState client = new ClientState(clientID, roomID, null);
+            LeaderState.getInstance().addClient(client);
+        } else {
+            //update leader server
+            MessageTransfer.sendToLeader(
+                    ServerMessage.getMoveJoinRequest(
+                            clientState.getClientID(),
+                            roomID,
+                            formerRoomID,
+                            String.valueOf(ServerState.getInstance().getSelfID()),
+                            String.valueOf(this.getId())
+                    )
+            );
+        }
+
     }
 
     //Delete room

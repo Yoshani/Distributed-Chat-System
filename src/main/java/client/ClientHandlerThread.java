@@ -317,6 +317,12 @@ public class ClientHandlerThread extends Thread {
                 clientState.setRoomOwner( true );
                 newRoom.addParticipants( clientState );
 
+                //update Leader state if self is leader
+                if (LeaderState.getInstance().isLeader()) {
+                    LeaderState.getInstance().addApprovedRoom(
+                            clientState.getClientID(), newRoomID, ServerState.getInstance().getSelfID());
+                }
+
                 synchronized (clientSocket) { //TODO : check sync | lock on out buffer?
                     ClientMessageContext msgCtx = new ClientMessageContext()
                             .setClientID(clientState.getClientID())

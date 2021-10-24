@@ -126,28 +126,18 @@ public class LeaderState
         return new ArrayList<>(this.activeChatRooms.keySet());
     }
 
-    public void removeRemoteChatRoomsByServerId(Integer serverId) {
-        ArrayList<String> roomIdList = new ArrayList<String>();
+    //remove all rooms and clients by server ID
+    public void removeRemoteChatRoomsClientsByServerId(Integer serverId) {
         for (String entry : activeChatRooms.keySet()) {
             Room remoteRoom = activeChatRooms.get(entry);
             if(remoteRoom.getServerID()==serverId){
-                roomIdList.add(remoteRoom.getRoomID());
+                for(String client : remoteRoom.getClientStateMap().keySet()){
+                    activeClientsList.remove(client);
+                }
                 activeChatRooms.remove(entry);
             }
         }
 
-//        for (String clientId : activeClientsList){
-//            if()
-//        }
     }
 
-//    public void removeRemoteUserSessionsByServerId(Integer serverId) {
-//        for (String entry : activeClientsList) {
-//
-//            RemoteUserSession remoteUserSession = remoteUserSessions.get(entry);
-//            if (remoteUserSession.getManagingServerId().equalsIgnoreCase(serverId)) {
-//                remoteUserSessions.remove(entry);
-//            }
-//        }
-//    }
 }

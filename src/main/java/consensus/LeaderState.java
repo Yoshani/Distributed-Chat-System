@@ -125,4 +125,29 @@ public class LeaderState
     public ArrayList<String> getRoomIDList() {
         return new ArrayList<>(this.activeChatRooms.keySet());
     }
+
+    public void removeRemoteChatRoomsByServerId(Integer serverId) {
+        ArrayList<String> roomIdList = new ArrayList<String>();
+        for (String entry : activeChatRooms.keySet()) {
+            Room remoteRoom = activeChatRooms.get(entry);
+            if(remoteRoom.getServerID()==serverId){
+                roomIdList.add(remoteRoom.getRoomID());
+                activeChatRooms.remove(entry);
+            }
+        }
+
+//        for (String clientId : activeClientsList){
+//            if()
+//        }
+    }
+
+//    public void removeRemoteUserSessionsByServerId(Integer serverId) {
+//        for (String entry : activeClientsList) {
+//
+//            RemoteUserSession remoteUserSession = remoteUserSessions.get(entry);
+//            if (remoteUserSession.getManagingServerId().equalsIgnoreCase(serverId)) {
+//                remoteUserSessions.remove(entry);
+//            }
+//        }
+//    }
 }

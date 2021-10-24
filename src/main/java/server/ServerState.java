@@ -176,23 +176,4 @@ public class ServerState {
         return voteSet;
     }
 
-    // TODO : handle remote chat rooms
-//    public void removeRemoteChatRoomsByServerId(Integer serverId) {
-//        for (String entry : remoteChatRooms.keySet()) {
-//            RemoteChatRoomInfo remoteChatRoomInfo = remoteChatRooms.get(entry);
-//            if (remoteChatRoomInfo.getManagingServer().equalsIgnoreCase(serverId)) {
-//                remoteChatRooms.remove(entry);
-//            }
-//        }
-//    }
-//
-//    public void removeRemoteUserSessionsByServerId(Integer serverId) {
-//        for (String entry : remoteUserSessions.keySet()) {
-//            RemoteUserSession remoteUserSession = remoteUserSessions.get(entry);
-//            if (remoteUserSession.getManagingServerId().equalsIgnoreCase(serverId)) {
-//                remoteUserSessions.remove(entry);
-//            }
-//        }
-//    }
-
 }

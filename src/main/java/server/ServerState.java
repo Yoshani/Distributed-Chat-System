@@ -17,8 +17,11 @@ public class ServerState {
     private int clientsPort;
     private int numberOfServersWithHigherIds;
 
+    private AtomicBoolean ongoingConsensus;
+
     private ConcurrentHashMap<Integer, String> suspectList;
     private ConcurrentHashMap<Integer, Integer> heartbeatCountList;
+    private ConcurrentHashMap<String, Integer> voteSet;
 
     private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
@@ -35,6 +38,8 @@ public class ServerState {
     private ServerState() {
         suspectList = new ConcurrentHashMap<>();
         heartbeatCountList = new ConcurrentHashMap<>();
+        ongoingConsensus = new AtomicBoolean(false);
+        voteSet = new ConcurrentHashMap<>();
     }
 
     public static ServerState getInstance() {
@@ -51,27 +56,27 @@ public class ServerState {
     public void initializeWithConfigs(String serverID, String serverConfPath) {
         this.serverID = serverID;
         try {
-            File conf = new File( serverConfPath ); // read configuration
+            File conf = new File(serverConfPath); // read configuration
             Scanner myReader = new Scanner(conf);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                String[] params = data.split( " " );
-                if( params[0].equals( serverID ) ) {
+                String[] params = data.split(" ");
+                if (params[0].equals(serverID)) {
                     this.serverAddress = params[1];
                     this.clientsPort = Integer.parseInt(params[2]);
                     this.coordinationPort = Integer.parseInt(params[3]);
-                    this.selfID = Integer.parseInt( params[0].substring( 1,2 ) );
+                    this.selfID = Integer.parseInt(params[0].substring(1, 2));
                 }
                 // add all servers to hash map
-                Server s = new Server( Integer.parseInt( params[0].substring( 1,2 ) ),
+                Server s = new Server(Integer.parseInt(params[0].substring(1, 2)),
                         Integer.parseInt(params[3]),
                         Integer.parseInt(params[2]),
                         params[1]);
-                servers.put( s.getServerID(), s );
+                servers.put(s.getServerID(), s);
             }
             myReader.close();
 
-        } catch ( FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             System.out.println("Configs file not found");
             e.printStackTrace();
         }
@@ -84,14 +89,14 @@ public class ServerState {
     }
 
     public void addClientHandlerThreadToMap(ClientHandlerThread clientHandlerThread) {
-        clientHandlerThreadMap.put( clientHandlerThread.getId(), clientHandlerThread );
+        clientHandlerThreadMap.put(clientHandlerThread.getId(), clientHandlerThread);
     }
 
     public ClientHandlerThread getClientHandlerThread(Long threadID) {
-        return clientHandlerThreadMap.get( threadID );
+        return clientHandlerThreadMap.get(threadID);
     }
 
-    public boolean isClientIDAlreadyTaken(String clientID){
+    public boolean isClientIDAlreadyTaken(String clientID) {
         for (Map.Entry<String, Room> entry : this.getRoomMap().entrySet()) {
             Room room = entry.getValue();
             if (room.getClientStateMap().containsKey(clientID)) return true;
@@ -107,29 +112,28 @@ public class ServerState {
         return clientsPort;
     }
 
-    public String getServerAddress()
-    {
+    public String getServerAddress() {
         return serverAddress;
     }
 
-    public int getCoordinationPort()
-    {
+    public int getCoordinationPort() {
         return coordinationPort;
     }
 
-    public int getSelfID()
-    {
+    public int getSelfID() {
         return selfID;
     }
 
-    public int getNumberOfServersWithHigherIds()
-    {
+    public int getNumberOfServersWithHigherIds() {
         return numberOfServersWithHigherIds;
     }
 
-    public HashMap<Integer,Server> getServers()
-    {
+    public HashMap<Integer, Server> getServers() {
         return servers;
+    }
+
+    public void removeServer(Integer serverId) {
+        servers.remove(serverId);
     }
 
     public Room getMainHall() {
@@ -140,13 +144,14 @@ public class ServerState {
         return roomMap;
     }
 
-    public String getMainHallID(){
+    public String getMainHallID() {
         return getMainHallIDbyServerInt(this.selfID);
     }
 
-    public static String getMainHallIDbyServerInt(int server){
-        return "MainHall-s"+ server;
+    public static String getMainHallIDbyServerInt(int server) {
+        return "MainHall-s" + server;
     }
+
     public synchronized void removeServerInSuspectList(Integer serverId) {
         suspectList.remove(serverId);
     }
@@ -161,6 +166,14 @@ public class ServerState {
 
     public ConcurrentHashMap<Integer, Integer> getHeartbeatCountList() {
         return heartbeatCountList;
+    }
+
+    public AtomicBoolean onGoingConsensus() {
+        return ongoingConsensus;
+    }
+
+    public ConcurrentHashMap<String, Integer> getVoteSet() {
+        return voteSet;
     }
 
 }

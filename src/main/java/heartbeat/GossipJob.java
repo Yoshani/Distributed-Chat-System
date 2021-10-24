@@ -7,21 +7,27 @@ import messaging.ServerMessage;
 import server.Server;
 import consensus.LeaderState;
 import messaging.MessageTransfer;
-
+import org.quartz.Job;
+import org.quartz.JobDataMap;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
 
-public class GossipJob implements Runnable{
+public class GossipJob implements Job{
 
     private ServerState serverState = ServerState.getInstance();
     private LeaderState leaderState = LeaderState.getInstance();
     private ServerMessage serverMessage = ServerMessage.getInstance();
-    Integer aliveErrorFactor = 2;
 
-    public void run(){
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException{
+
+        JobDataMap dataMap = context.getJobDetail().getJobDataMap();
+        String aliveErrorFactor = dataMap.get("aliveErrorFactor").toString();
 
         // first work on heart beat vector and suspect failure server list
 
@@ -50,7 +56,7 @@ public class GossipJob implements Runnable{
             if (count != null) {
                 // if heart beat count is more than error factor
                 // TODO: change aliveErrorFactor
-                if (count > aliveErrorFactor) {
+                if (count > Integer.parseInt(aliveErrorFactor)) {
                     serverState.getSuspectList().put(serverId, "SUSPECTED");
                 } else {
                     serverState.getSuspectList().put(serverId, "NOT_SUSPECTED");
@@ -93,7 +99,7 @@ public class GossipJob implements Runnable{
             Collections.shuffle(remoteServer, new Random(System.nanoTime())); // another way of randomize the list
 
             // change concurrent hashmap to hashmap before sending
-            HashMap<Integer, Integer> heartbeatCountList = new HashMap<Integer, Integer>(serverState.getHeartbeatCountList());
+            HashMap<Integer, Integer> heartbeatCountList = new HashMap<>(serverState.getHeartbeatCountList());
             JSONObject gossipMessage = new JSONObject();
             gossipMessage = serverMessage.gossipMessage(serverState.getSelfID(), heartbeatCountList);
             try {

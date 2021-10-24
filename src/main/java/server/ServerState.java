@@ -78,8 +78,8 @@ public class ServerState {
         // set number of servers with higher ids
         numberOfServersWithHigherIds = servers.size() - selfID;
 
-        this.mainHall = new Room("default-" + serverID, "MainHall-" + serverID, selfID);
-        this.roomMap.put("MainHall-" + serverID, mainHall); // TODO: owner id of mainhall should be ""
+        this.mainHall = new Room("", getMainHallID(), selfID);
+        this.roomMap.put(getMainHallID(), mainHall);
 
     }
 
@@ -140,6 +140,13 @@ public class ServerState {
         return roomMap;
     }
 
+    public String getMainHallID(){
+        return getMainHallIDbyServerInt(this.selfID);
+    }
+
+    public static String getMainHallIDbyServerInt(int server){
+        return "MainHall-s"+ server;
+    }
     public synchronized void removeServerInSuspectList(Integer serverId) {
         suspectList.remove(serverId);
     }

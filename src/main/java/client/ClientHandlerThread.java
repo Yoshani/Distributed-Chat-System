@@ -437,11 +437,15 @@ public class ClientHandlerThread extends Thread {
             //check if room id exist and if init route
             if (LeaderState.getInstance().isLeader()) {
                 int serverIDofTargetRoom = LeaderState.getInstance().getServerIdIfRoomExist(roomID);
-                Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
 
                 approvedJoinRoom = serverIDofTargetRoom != -1 ? 1 : 0;
-                approvedJoinRoomServerHostAddress = serverOfTargetRoom.getServerAddress();
-                approvedJoinRoomServerPort = String.valueOf(serverOfTargetRoom.getClientsPort());
+
+                if (approvedJoinRoom == 1) {
+                    Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
+                    approvedJoinRoomServerHostAddress = serverOfTargetRoom.getServerAddress();
+                    approvedJoinRoomServerPort = String.valueOf(serverOfTargetRoom.getClientsPort());
+                }
+
                 System.out.println("INFO : Received response for route request for join room (Self is Leader)");
 
             } else {

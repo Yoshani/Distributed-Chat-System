@@ -151,20 +151,21 @@ public class ServerHandlerThread extends Thread {
                         } else {
                             int serverIDofTargetRoom = LeaderState.getInstance().getServerIdIfRoomExist(roomID);
 
-                            if (serverIDofTargetRoom != -1) {
-                                LeaderState.getInstance().removeClient(clientID,formerRoomID);//remove before route, later add on move join
-                            }
                             Server destServer = ServerState.getInstance().getServers().get(sender);
                             try {
 
+                                boolean approved = serverIDofTargetRoom != -1;
+                                if (approved) {
+                                    LeaderState.getInstance().removeClient(clientID, formerRoomID);//remove before route, later add on move join
+                                }
                                 Server serverOfTargetRoom = ServerState.getInstance().getServers().get(serverIDofTargetRoom);
 
-                                String host = serverOfTargetRoom.getServerAddress();
-                                String port = String.valueOf(serverOfTargetRoom.getClientsPort());
+                                String host = (approved) ? serverOfTargetRoom.getServerAddress() : "";
+                                String port = (approved) ? String.valueOf(serverOfTargetRoom.getClientsPort()) : "";
 
                                 MessageTransfer.sendServer(
                                         ServerMessage.getJoinRoomApprovalReply(
-                                                String.valueOf(serverIDofTargetRoom != -1),
+                                                String.valueOf(approved),
                                                 threadID, host, port),
                                         destServer
                                 );

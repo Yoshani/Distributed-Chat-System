@@ -192,4 +192,13 @@ public class ServerMessage
         jsonObject.put("suspectServerId", suspectServerId);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject notifyServerDownMessage(Integer serverId) {
+        // {"type":"notifyserverdown", "serverid":"s2"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "notifyserverdown");
+        jsonObject.put("serverId", serverId);
+        return jsonObject;
+    }
 }

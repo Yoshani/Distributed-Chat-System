@@ -68,6 +68,16 @@ public class MessageTransfer
         dataOutputStream.flush();
     }
 
+    //send broadcast message
+    public static void sendServerBroadcast(JSONObject obj, ArrayList<Server> serverList) throws IOException {
+        for (Server each : serverList) {
+            Socket socket = new Socket(each.getServerAddress(), each.getCoordinationPort());
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.write((obj.toJSONString() + "\n").getBytes( StandardCharsets.UTF_8));
+            dataOutputStream.flush();
+        }
+    }
+
     //send message to leader server
     public static void sendToLeader(JSONObject obj) throws IOException
     {

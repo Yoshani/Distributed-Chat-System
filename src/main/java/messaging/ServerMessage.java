@@ -131,4 +131,14 @@ public class ServerMessage
         jsonObject.put("rooms", roomIDList);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject getDeleteRoomRequest(String ownerID, String roomID, String mainHallID) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "deleterequest");
+        jsonObject.put("owner", ownerID);
+        jsonObject.put("roomid", roomID);
+        jsonObject.put("mainhall", mainHallID);
+        return jsonObject;
+    }
 }

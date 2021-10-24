@@ -554,7 +554,7 @@ public class ClientHandlerThread extends Thread {
     }
 
     //Delete room
-    private void deleteRoom(String roomID) throws IOException {
+    private void deleteRoom(String roomID) throws IOException, InterruptedException {
 
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
@@ -592,14 +592,21 @@ public class ClientHandlerThread extends Thread {
                         .setRoomID(roomID)
                         .setIsDeleteRoomApproved("true");
 
-                messageSend(socketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.DELETE_ROOM));
-                //TODO : shared attr impl check
-                SharedAttributes.removeRoomFromGlobalRoomList(roomID);
-                int index = SharedAttributes.getNeighbourIndex();
-                Server destServer = ServerState.getInstance().getServers().get(index);
-                JSONObject obj=new JSONObject();
-                obj.put("delete-room",roomID);
-                MessageTransfer.sendRooms( obj,destServer);
+                //TODO : check sync
+                while (!LeaderState.getInstance().isLeaderElected()) {
+                    Thread.sleep(1000);
+                }
+
+                //if self is leader update leader state directly
+                if (LeaderState.getInstance().isLeader()) {
+                    LeaderState.getInstance().removeRoom(roomID, mainHallRoomID, clientState.getClientID());
+                } else {
+                    //update leader server
+                    MessageTransfer.sendToLeader(
+                            ServerMessage.getDeleteRoomRequest(clientState.getClientID(), roomID, mainHallRoomID)
+                    );
+                }
+
                 System.out.println("INFO : room [" + roomID + "] was deleted by : " + clientState.getClientID());
 
             } else {
@@ -610,8 +617,6 @@ public class ClientHandlerThread extends Thread {
                 messageSend(null, msgCtx.setMessageType(CLIENT_MSG_TYPE.DELETE_ROOM));
                 System.out.println("WARN : Requesting client [" + clientState.getClientID() + "] does not own the room ID [" + roomID + "]");
             }
-            //TODO : check global, room change all members
-            // } else if(inAnotherServer){
         } else {
             ClientMessageContext msgCtx = new ClientMessageContext()
                     .setRoomID(roomID)

@@ -70,7 +70,23 @@ public class LeaderState
 
         //add client to the new room
         ClientState clientState = new ClientState(clientID, roomID, null);
+        clientState.setRoomOwner(true);
         room.addParticipants(clientState);
+    }
+
+    public void removeRoom(String roomID, String mainHallID, String ownerID) {
+        HashMap<String, ClientState> formerClientStateMap = this.activeChatRooms.get(roomID).getClientStateMap();
+        Room mainHall = this.activeChatRooms.get(mainHallID);
+
+        //update client room to main hall , add clients to main hall
+        formerClientStateMap.forEach((clientID, clientState) -> {
+            clientState.setRoomID(mainHallID);
+            mainHall.getClientStateMap().put(clientState.getClientID(), clientState);
+        });
+
+        //set to room owner false, remove room from map
+        formerClientStateMap.get(ownerID).setRoomOwner(false);
+        this.activeChatRooms.remove(roomID);
     }
 
     public void addServerDefaultMainHalls(){

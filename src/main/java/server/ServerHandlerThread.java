@@ -237,6 +237,13 @@ public class ServerHandlerThread extends Thread {
                             clientHandlerThread.setRoomsListTemp(roomIDList);
                             lock.notifyAll();
                         }
+                    } else if (j_object.get("type").equals("deleterequest")) {
+                        String ownerID = j_object.get("owner").toString();
+                        String roomID = j_object.get("roomid").toString();
+                        String mainHallID = j_object.get("mainhall").toString();
+
+                        LeaderState.getInstance().removeRoom(roomID,mainHallID,ownerID);
+
                     } else {
                         System.out.println( "WARN : Command error, Corrupted JSON from Server" );
                     }

@@ -33,6 +33,7 @@ public class ClientHandlerThread extends Thread {
 
     private List<String> roomsListTemp;
 
+    private  int approvedRoomDeletion = -1;
     final Object lock;
 
     public ClientHandlerThread(Socket clientSocket) {
@@ -122,7 +123,9 @@ public class ClientHandlerThread extends Thread {
                     // if self is leader get direct approval
                     if( LeaderState.getInstance().isLeader() )
                     {
-                        approvedClientID = LeaderState.getInstance().isClientIDAlreadyTaken( clientID ) ? 0 : 1;
+                        boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
+                        approvedClientID = approved ? 1 : 0;
+                        System.out.println("INFO : Client ID '"+ clientID + " is" + (approved ? " ":" not ") + "approved");
                     }
                     else
                     {
@@ -271,7 +274,11 @@ public class ClientHandlerThread extends Thread {
                     // if self is leader get direct approval
                     if( LeaderState.getInstance().isLeader() )
                     {
-                        approvedRoomCreation = LeaderState.getInstance().isRoomCreationApproved( newRoomID ) ? 1 : 0;
+                        boolean approved = LeaderState.getInstance().isRoomCreationApproved( newRoomID );
+                        approvedRoomCreation = approved ? 1 : 0;
+                        System.out.println("INFO : Room '"+ newRoomID +
+                                                   "' creation request from client " + clientState.getClientID() +
+                                                   " is" + (approved ? " ":" not ") + "approved");
                     }
                     else
                     {
@@ -563,18 +570,23 @@ public class ClientHandlerThread extends Thread {
             Room room = ServerState.getInstance().getRoomMap().get(roomID);
             if (room.getOwnerIdentity().equals(clientState.getClientID())) {
 
-                HashMap<String,ClientState> formerClientList = ServerState.getInstance().getRoomMap().get(roomID).getClientStateMap();
-                HashMap<String,ClientState> mainHallClientList = ServerState.getInstance().getRoomMap().get(mainHallRoomID).getClientStateMap();
+                // clients in deleted room
+                HashMap<String,ClientState> formerClientList = ServerState.getInstance().getRoomMap()
+                                                                          .get(roomID).getClientStateMap();
+                // former clients in main hall
+                HashMap<String,ClientState> mainHallClientList = ServerState.getInstance().getRoomMap()
+                                                                            .get(mainHallRoomID).getClientStateMap();
                 mainHallClientList.putAll(formerClientList);
 
                 ArrayList<Socket> socketList = new ArrayList<>();
-                for (String each:mainHallClientList.keySet()){
+                for (String each : mainHallClientList.keySet()){
                     socketList.add(mainHallClientList.get(each).getSocket());
                 }
 
                 ServerState.getInstance().getRoomMap().remove(roomID);
                 clientState.setRoomOwner( false );
 
+                // broadcast roomchange message to all clients in deleted room and former clients in main hall
                 for(String client:formerClientList.keySet()){
                     String clientID = formerClientList.get(client).getClientID();
                     formerClientList.get(client).setRoomID(mainHallRoomID);
@@ -630,6 +642,16 @@ public class ClientHandlerThread extends Thread {
     //quit room
     private void quit() throws IOException {
 
+        // send quit message to leader if self is not leader
+        if( !LeaderState.getInstance().isLeader() ) {
+            MessageTransfer.sendToLeader(
+                    ServerMessage.getQuit( clientState.getClientID() )
+            );
+        } else {
+            // leader removes client
+            LeaderState.getInstance().removeApprovedClient( clientState.getClientID() );
+        }
+
         String roomID = clientState.getRoomID();
         String mainHallRoomID = ServerState.getInstance().getMainHall().getRoomID();
 
@@ -676,7 +698,7 @@ public class ClientHandlerThread extends Thread {
 
                 messageSend(socketList, msgCtx.setMessageType(CLIENT_MSG_TYPE.DELETE_ROOM));
 
-                System.out.println("INFO : "+ clientState.getClientID()+ " is quit");
+                System.out.println("INFO : "+ clientState.getClientID()+ " quit");
 
             } else {
                 ClientMessageContext msgCtx = new ClientMessageContext()

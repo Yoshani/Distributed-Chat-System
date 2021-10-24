@@ -5,6 +5,8 @@ import client.ClientHandlerThread;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerState {
 
@@ -15,6 +17,9 @@ public class ServerState {
     private int clientsPort;
     private int numberOfServersWithHigherIds;
 
+    private ConcurrentHashMap<Integer, String> suspectList;
+    private ConcurrentHashMap<Integer, Integer> heartbeatCountList;
+
     private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
     private Room mainHall;
@@ -22,12 +27,14 @@ public class ServerState {
     // maintain client handler thread map <threadID, thread>
     private final HashMap<Long, ClientHandlerThread> clientHandlerThreadMap = new HashMap<>();
 
-    private final HashMap<String, Room> roomMap = new HashMap<>();  // maintain room object list <roomID,roomObject>
+    private final HashMap<String, Room> roomMap = new HashMap<>();  // maintain local room object list <roomID,roomObject>
 
     //singleton
     private static ServerState serverStateInstance;
 
     private ServerState() {
+        suspectList = new ConcurrentHashMap<>();
+        heartbeatCountList = new ConcurrentHashMap<>();
     }
 
     public static ServerState getInstance() {
@@ -140,4 +147,20 @@ public class ServerState {
     public static String getMainHallIDbyServerInt(int server){
         return "MainHall-s"+ server;
     }
+    public synchronized void removeServerInSuspectList(Integer serverId) {
+        suspectList.remove(serverId);
+    }
+
+    public ConcurrentHashMap<Integer, String> getSuspectList() {
+        return suspectList;
+    }
+
+    public synchronized void removeServerInCountList(Integer serverId) {
+        heartbeatCountList.remove(serverId);
+    }
+
+    public ConcurrentHashMap<Integer, Integer> getHeartbeatCountList() {
+        return heartbeatCountList;
+    }
+
 }

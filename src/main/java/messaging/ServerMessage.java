@@ -183,4 +183,13 @@ public class ServerMessage
         jsonObject.put("heartbeatCountList", heartbeatCountList);
         return jsonObject;
     }
+
+    @SuppressWarnings("unchecked")
+    public static JSONObject startVoteMessage(Integer serverId, Integer suspectServerId) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "startVote");
+        jsonObject.put("serverId", serverId);
+        jsonObject.put("suspectServerId", suspectServerId);
+        return jsonObject;
+    }
 }

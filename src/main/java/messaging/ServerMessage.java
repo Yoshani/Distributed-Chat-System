@@ -144,6 +144,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getListRequest(String clientID, String threadID, String sender) {
+        // {"type" : "listrequest", "clientid" : "Adel", "sender" : 1, "threadid" : 12 }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "listrequest");
         jsonObject.put("sender", sender);
@@ -154,6 +155,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getListResponse(ArrayList<String> roomIDList, String threadID) {
+        // {"type" : "listresponse", "rooms" : ["room-1","MainHall-s1","MainHall-s2"], "threadid" : 12 }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "listresponse");
         jsonObject.put("threadid", threadID);
@@ -163,6 +165,7 @@ public class ServerMessage
 
     @SuppressWarnings("unchecked")
     public static JSONObject getDeleteRoomRequest(String ownerID, String roomID, String mainHallID) {
+        // {"type" : "deleterequest", "owner" : "Adel", "roomid" : "jokes", "mainhall" : "MainHall-s1" }
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "deleterequest");
         jsonObject.put("owner", ownerID);

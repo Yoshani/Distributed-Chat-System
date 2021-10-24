@@ -58,22 +58,6 @@ public class MessageTransfer
         dataOutputStream.flush();
     }
 
-    //send message to client
-//    public static void sendRooms(JSONObject obj, Socket socket) throws IOException {
-//        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-//        dataOutputStream.write((obj.toJSONString() + "\n").getBytes(StandardCharsets.UTF_8));
-//        dataOutputStream.flush();
-//    }
-
-    //send message to client
-    public static void sendRooms(JSONObject obj, Server destServer) throws IOException {
-        Socket socket = new Socket(destServer.getServerAddress(),
-                destServer.getCoordinationPort());
-        DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-        dataOutputStream.write((obj.toJSONString() + "\n").getBytes( StandardCharsets.UTF_8));
-        dataOutputStream.flush();
-    }
-
     //send message to server
     public static void sendServer( JSONObject obj, Server destServer) throws IOException
     {

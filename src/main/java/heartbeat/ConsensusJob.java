@@ -103,9 +103,81 @@ public class ConsensusJob implements Job {
                         System.out.println("ERROR : " + suspectServerId + "Removing is failed");
                     }
 
-                    System.out.println(("INFO : Number of servers in group: " + serverState.getServers().size()));
+                    System.out.println("INFO : Number of servers in group: " + serverState.getServers().size());
                 }
             }
         }
     }
+
+    public static void startVoteMessageHandler(JSONObject j_object){
+
+        ServerState serverState = ServerState.getInstance();
+        ServerMessage serverMessage = ServerMessage.getInstance();
+
+        Integer suspectServerId = (int) (long)j_object.get("suspectServerId");
+        Integer serverId = (int) (long)j_object.get("serverId");
+        Integer mySeverId = serverState.getSelfID();
+
+        if (serverState.getSuspectList().containsKey(suspectServerId)) {
+            if (serverState.getSuspectList().get(suspectServerId) == "SUSPECTED") {
+
+                JSONObject answerVoteMessage = new JSONObject();
+                answerVoteMessage = serverMessage.answerVoteMessage(suspectServerId, "YES", mySeverId);
+                try {
+                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(serverId));
+                    System.out.println(String.format("INFO : Voting on suspected server: [%s] vote: YES", suspectServerId));
+                } catch (Exception e) {
+                    System.out.println("ERROR : Voting on suspected server is failed");
+                }
+
+            } else {
+
+                JSONObject answerVoteMessage = new JSONObject();
+                answerVoteMessage = serverMessage.answerVoteMessage(suspectServerId, "NO", mySeverId);
+                try {
+                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(serverId));
+                    System.out.println(String.format("INFO : Voting on suspected server: [%s] vote: NO", suspectServerId));
+                } catch (Exception e) {
+                    System.out.println("ERROR : Voting on suspected server is failed");
+                }
+            }
+        }
+
+    }
+
+    public static void answerVoteHandler(JSONObject j_object){
+
+        ServerState serverState = ServerState.getInstance();
+
+        Integer suspectServerId = (int) (long)j_object.get("suspectServerId");
+        String vote = (String) j_object.get("vote");
+        Integer votedBy = (int) (long)j_object.get("votedBy");
+
+        Integer voteCount = serverState.getVoteSet().get(vote);
+
+        System.out.println(String.format("Receiving voting to kick [%s]: [%s] voted by server: [%s]", suspectServerId, vote, votedBy));
+
+        if (voteCount == null) {
+            serverState.getVoteSet().put(vote, 1);
+        } else {
+            serverState.getVoteSet().put(vote, voteCount + 1);
+        }
+
+    }
+
+    public static void notifyServerDownMessageHandler(JSONObject j_object){
+
+        ServerState serverState = ServerState.getInstance();
+
+        Integer serverId = (int) (long)j_object.get("serverId");
+
+        System.out.println("Server down notification received. Removing server: " + serverId);
+
+        serverState.removeServer(serverId);
+//        serverState.removeRemoteChatRoomsByServerId(serverId);
+//        serverState.removeRemoteUserSessionsByServerId(serverId);
+        serverState.removeServerInCountList(serverId);
+        serverState.removeServerInSuspectList(serverId);
+    }
+
 }

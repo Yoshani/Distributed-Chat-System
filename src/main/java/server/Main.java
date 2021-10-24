@@ -3,6 +3,7 @@ package server;
 import client.ClientHandlerThread;
 import consensus.BullyAlgorithm;
 import heartbeat.GossipJob;
+import heartbeat.ConsensusJob;
 import model.Constant;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
@@ -25,6 +26,8 @@ public class Main {
     private static Integer alive_interval = 3;
     private static Integer alive_error_factor = 5;
     private static Boolean isGossip = true;
+    private static Integer consensus_interval=10;
+    private static Integer consensus_vote_duration=5;
 
     public static void main(String[] args) {
 
@@ -98,7 +101,7 @@ public class Main {
             if (isGossip) {
                 System.out.println("INFO : Failure Detection is running GOSSIP mode");
                 startGossip();
-//                startConsensus();
+                startConsensus();
             }
 
 
@@ -147,6 +150,31 @@ public class Main {
 
         } catch (SchedulerException e) {
             System.out.println("ERROR : Error in starting gossiping");
+        }
+    }
+
+    private static void startConsensus() {
+        try {
+
+            JobDetail consensusJob = JobBuilder.newJob(ConsensusJob.class)
+                    .withIdentity(Constant.CONSENSUS_JOB, "group1").build();
+
+            consensusJob.getJobDataMap().put("consensusVoteDuration", consensus_vote_duration);
+
+            Trigger consensusTrigger = TriggerBuilder
+                    .newTrigger()
+                    .withIdentity(Constant.CONSENSUS_JOB_TRIGGER, "group1")
+                    .withSchedule(
+                            SimpleScheduleBuilder.simpleSchedule()
+                                    .withIntervalInSeconds(consensus_interval).repeatForever())
+                    .build();
+
+            Scheduler scheduler = new StdSchedulerFactory().getScheduler();
+            scheduler.start();
+            scheduler.scheduleJob(consensusJob, consensusTrigger);
+
+        } catch (SchedulerException e) {
+            System.out.println("ERROR : Error in starting consensus");
         }
     }
 

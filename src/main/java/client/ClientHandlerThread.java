@@ -645,11 +645,11 @@ public class ClientHandlerThread extends Thread {
         // send quit message to leader if self is not leader
         if( !LeaderState.getInstance().isLeader() ) {
             MessageTransfer.sendToLeader(
-                    ServerMessage.getQuit( clientState.getClientID() )
+                    ServerMessage.getQuit(clientState.getClientID(), clientState.getRoomID())
             );
         } else {
             // leader removes client
-            LeaderState.getInstance().removeApprovedClient( clientState.getClientID() );
+            LeaderState.getInstance().removeClient(clientState.getClientID(),clientState.getRoomID() );
         }
 
         String roomID = clientState.getRoomID();

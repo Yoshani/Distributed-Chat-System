@@ -133,11 +133,12 @@ public class ServerMessage
     }
 
     @SuppressWarnings("unchecked")
-    public static JSONObject getQuit(String clientID) {
+    public static JSONObject getQuit(String clientID, String formerRoomID) {
         // {"type" : "quit", "clientid" : "Adel"}
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "quit");
         jsonObject.put("clientid", clientID);
+        jsonObject.put("former", formerRoomID);
         return jsonObject;
     }
 

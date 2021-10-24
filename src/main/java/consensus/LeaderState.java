@@ -10,7 +10,7 @@ import java.util.List;
 
 public class LeaderState
 {
-    private int leaderID;
+    private Integer leaderID;
 
     private final List<String> activeClientsList = new ArrayList<>();
     private final HashMap<String, Room> activeChatRooms = new HashMap<>(); // <roomID, room obj>
@@ -112,7 +112,7 @@ public class LeaderState
         }
     }
 
-    public int getLeaderID()
+    public Integer getLeaderID()
     {
         return leaderID;
     }

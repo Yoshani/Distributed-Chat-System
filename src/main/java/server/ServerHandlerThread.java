@@ -248,8 +248,9 @@ public class ServerHandlerThread extends Thread {
 
                     } else if ( j_object.get("type").equals("quit") ) {
                         String clientID = j_object.get("clientid").toString();
+                        String formerRoomID = j_object.get("former").toString();
                         // leader removes client from global room list
-                        LeaderState.getInstance().removeApprovedClient( clientID );
+                        LeaderState.getInstance().removeClient(clientID, formerRoomID);
                         System.out.println("INFO : Client '"+ clientID + "' deleted by leader");
                     }else if(j_object.get("type").equals("gossip")){
                         GossipJob.receiveMessages(j_object);

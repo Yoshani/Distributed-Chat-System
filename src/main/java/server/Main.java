@@ -98,11 +98,11 @@ public class Main {
 //            startGossip();
 //            Runnable gossip = new GossipJob();
 //            new Thread(gossip).start();
-            if (isGossip) {
-                System.out.println("INFO : Failure Detection is running GOSSIP mode");
-                startGossip();
-                startConsensus();
-            }
+//            if (isGossip) {
+//                System.out.println("INFO : Failure Detection is running GOSSIP mode");
+//                startGossip();
+//                startConsensus();
+//            }
 
 
             /**

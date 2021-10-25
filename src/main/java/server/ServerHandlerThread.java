@@ -17,6 +17,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ServerHandlerThread extends Thread {
 
@@ -252,6 +254,21 @@ public class ServerHandlerThread extends Thread {
                         // leader removes client from global room list
                         LeaderState.getInstance().removeClient(clientID, formerRoomID);
                         System.out.println("INFO : Client '" + clientID + "' deleted by leader");
+
+                    } else if (j_object.get("type").equals("leaderstateupdate")) { // TODO: all waiting processes must wait until leader updation
+                        JSONArray clientIdList = ( JSONArray ) j_object.get( "clients" );
+                        JSONArray chatRoomsList = ( JSONArray ) j_object.get( "chatrooms" );
+                        System.out.println(chatRoomsList);
+
+                        for( Object clientID : clientIdList ) {
+                            LeaderState.getInstance().addClientLeaderUpdate( clientID.toString() );
+                        }
+
+                        for( Object chatRoom : chatRoomsList ) {
+                            JSONObject j_room = (JSONObject)chatRoom;
+                            LeaderState.getInstance().addApprovedRoom( j_room.get("clientid").toString(),
+                                    j_room.get("roomid").toString(), Integer.parseInt(j_room.get("serverid").toString()) );
+                        }
 
                     } else if (j_object.get("type").equals("gossip")) {
                         GossipJob.receiveMessages(j_object);

@@ -6,6 +6,8 @@ import org.json.simple.JSONObject;
 import server.Server;
 import server.ServerState;
 
+import java.io.IOException;
+
 public class BullyAlgorithm implements Runnable{
     String operation;
     String reqType;
@@ -27,7 +29,7 @@ public class BullyAlgorithm implements Runnable{
      * The run() method has the required logic for handling the receiver, sender, timer and heartbeat thread.
      * The timer thread waits for 7 seconds to receive a response. If it receives an OK but doesn't receive a leader
      * then it starts an election process again.
-     * The receiver thread accepts the all incoming requests.
+     * The receiver thread accepts all the incoming requests.
      */
     public void run() {
 
@@ -40,7 +42,7 @@ public class BullyAlgorithm implements Runnable{
                     Thread.sleep( 7000 );
                     if( !receivedOk )
                     {
-                        // OK not receivedOk. Set self as leader
+                        // OK not received. Set self as leader
                         LeaderState.getInstance().setLeaderID( ServerState.getInstance().getSelfID() );
                         electionInProgress = false; // allow another election request to come in
                         leaderFlag = true;
@@ -237,6 +239,19 @@ public class BullyAlgorithm implements Runnable{
                 receivedOk = false;
                 System.out.println( "INFO : Server s" + LeaderState.getInstance().getLeaderID()
                                             + " is selected as leader! " );
+
+                // send local client list and chat room list to leader
+                try
+                {
+                    MessageTransfer.sendToLeader(
+                            ServerMessage.getLeaderStateUpdate(
+                                    ServerState.getInstance().getClientIdList(),
+                                    ServerState.getInstance().getChatRoomList()
+                            )
+                    );
+                } catch( IOException e ) {
+                    System.out.println("WARN : Leader state update message could not be sent");
+                }
                 break;
             case "heartbeat": {
                 // {"option": "heartbeat", "sender": 1}

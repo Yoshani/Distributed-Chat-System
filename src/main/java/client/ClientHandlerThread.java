@@ -33,13 +33,17 @@ public class ClientHandlerThread extends Thread {
 
     private List<String> roomsListTemp;
 
-    private  int approvedRoomDeletion = -1;
     final Object lock;
 
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
         this.clientSocket = clientSocket;
         this.lock = new Object();
+    }
+
+    public String getClientId()
+    {
+        return clientState.getClientID();
     }
 
     public void setApprovedClientID( int approvedClientID ) {

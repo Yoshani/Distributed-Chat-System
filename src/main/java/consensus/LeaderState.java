@@ -26,7 +26,7 @@ public class LeaderState
             synchronized (LeaderState.class) {
                 if (leaderStateInstance == null) {
                     leaderStateInstance = new LeaderState(); //instance will be created at request time
-                    leaderStateInstance.addServerDefaultMainHalls();
+                    leaderStateInstance.addServerDefaultMainHalls(); // TODO: remove this?
                 }
             }
         }
@@ -48,6 +48,10 @@ public class LeaderState
     public void addClient(ClientState client) {
         activeClientsList.add(client.getClientID());
         activeChatRooms.get(client.getRoomID()).addParticipants(client);
+    }
+
+    public void addClientLeaderUpdate(String clientID) {
+        activeClientsList.add(clientID);
     }
 
     public void removeClient(String clientID, String formerRoomID) {

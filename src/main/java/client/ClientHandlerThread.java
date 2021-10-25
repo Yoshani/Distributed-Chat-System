@@ -12,6 +12,7 @@ import messaging.ClientMessage;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +36,8 @@ public class ClientHandlerThread extends Thread {
 
     private  int approvedRoomDeletion = -1;
     final Object lock;
+
+    private boolean quitFlag = false;
 
     public ClientHandlerThread(Socket clientSocket) {
         String serverID = ServerState.getInstance().getServerID();
@@ -498,7 +501,7 @@ public class ClientHandlerThread extends Thread {
                 //server change : route
                 messageSend(SocketList,  msgCtx.setMessageType(CLIENT_MSG_TYPE.ROUTE));
                 System.out.println("INFO : Route Message Sent to Client");
-
+                quitFlag = true;
 
             } else if (approvedJoinRoom == 0) { // Room not found on system
                 ClientMessageContext msgCtx = new ClientMessageContext()
@@ -679,6 +682,8 @@ public class ClientHandlerThread extends Thread {
             LeaderState.getInstance().removeClient(clientState.getClientID(),clientState.getRoomID() );
         }
 
+        if (!clientSocket.isClosed()) clientSocket.close();
+        quitFlag = true;
         System.out.println("INFO : " + clientState.getClientID() + " quit");
     }
 
@@ -713,11 +718,11 @@ public class ClientHandlerThread extends Thread {
             BufferedReader bufferedReader = new BufferedReader(
                     new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
 
-            while (true) {
+            while (!quitFlag) {
 
-                String jsonStringFromClient = bufferedReader.readLine();
 
                 try {
+                    String jsonStringFromClient = bufferedReader.readLine();
 
                     if (jsonStringFromClient==null){
                         continue;
@@ -770,17 +775,18 @@ public class ClientHandlerThread extends Thread {
                         System.out.println("WARN : Command error, Corrupted JSON");
                     }
 
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }  catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (ParseException | InterruptedException | SocketException e) {
+                    quit();
+                    //e.printStackTrace();
+                    System.out.println("WARN : " + clientState.getClientID() + " forced quit on exception : " + e.getMessage());
                 }
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException | InterruptedException e) {
+            //e.printStackTrace();
+            System.out.println("WARN : unhandled quit state exception : " + e.getMessage());
         }
-
+        System.out.println("INFO : " + clientState.getClientID() + " Thread terminated");
     }
 
 }

@@ -24,7 +24,7 @@ import java.util.List;
 public class ServerHandlerThread extends Thread {
 
     private final ServerSocket serverCoordinationSocket;
-    private LeaderStateUpdate leaderStateUpdate;
+    private LeaderStateUpdate leaderStateUpdate = new LeaderStateUpdate();
 
     public ServerHandlerThread(ServerSocket serverCoordinationSocket) {
         this.serverCoordinationSocket = serverCoordinationSocket;
@@ -258,9 +258,10 @@ public class ServerHandlerThread extends Thread {
                         System.out.println("INFO : Client '" + clientID + "' deleted by leader");
 
                     } else if (j_object.get("type").equals("leaderstateupdate")) {
+                        System.out.println(j_object);
 
                         if( !leaderStateUpdate.isAlive() ) {
-                            leaderStateUpdate = new LeaderStateUpdate( );
+                            leaderStateUpdate = new LeaderStateUpdate();
                             leaderStateUpdate.start();
                         }
                         leaderStateUpdate.receiveUpdate( j_object );

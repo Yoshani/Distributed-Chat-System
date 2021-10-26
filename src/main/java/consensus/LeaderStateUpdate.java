@@ -15,14 +15,15 @@ public class LeaderStateUpdate extends Thread {
         long end = start + 5000;
         try {
 
-            while ( leaderUpdateInProgress && numberOfUpdatesReceived < numberOfServersWithLowerIds ) {
-                if( System.currentTimeMillis() < end ) {
+            while ( leaderUpdateInProgress ) {
+                if( System.currentTimeMillis() > end || numberOfUpdatesReceived == numberOfServersWithLowerIds ) {
                     leaderUpdateInProgress = false;
+                    System.out.println("INFO : Leader update completed");
+                    System.out.println(LeaderState.getInstance().getRoomIDList());
+                    BullyAlgorithm.leaderUpdateComplete = true;
                 }
                 Thread.sleep(10);
             }
-            System.out.println("INFO : Leader update completed");
-            BullyAlgorithm.leaderUpdateComplete = true;
 
         } catch( Exception e ) {
             System.out.println( "WARN : Exception in leader update thread" );
@@ -35,7 +36,7 @@ public class LeaderStateUpdate extends Thread {
         numberOfUpdatesReceived += 1;
         JSONArray clientIdList = ( JSONArray ) j_object.get( "clients" );
         JSONArray chatRoomsList = ( JSONArray ) j_object.get( "chatrooms" );
-        System.out.println(chatRoomsList);
+        //System.out.println(chatRoomsList);
 
         for( Object clientID : clientIdList ) {
             LeaderState.getInstance().addClientLeaderUpdate( clientID.toString() );

@@ -73,12 +73,10 @@ public class ServerMessage
             chatRooms.add( chatRoom );
         }
 
-        System.out.println(chatRooms);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("type", "leaderstateupdate");
         jsonObject.put("clients", clients);
         jsonObject.put("chatrooms", chatRooms);
-        System.out.println(jsonObject);
         return jsonObject;
     }
 

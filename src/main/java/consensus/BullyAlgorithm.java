@@ -50,6 +50,9 @@ public class BullyAlgorithm implements Runnable{
                         leaderFlag = true;
                         System.out.println( "INFO : Server s" + LeaderState.getInstance().getLeaderID()
                                                     + " is selected as leader! " );
+
+                        LeaderState.getInstance().resetLeader(); // reset leader lists when newly elected
+
                         Runnable sender = new BullyAlgorithm( "Sender", "coordinator" );
                         new Thread( sender ).start();
                     }
@@ -238,6 +241,7 @@ public class BullyAlgorithm implements Runnable{
                 LeaderState.getInstance().setLeaderID(
                         Integer.parseInt(j_object.get( "leader" ).toString()) );
                 leaderFlag = true;
+                leaderUpdateComplete = false;
                 electionInProgress = false;
                 receivedOk = false;
                 System.out.println( "INFO : Server s" + LeaderState.getInstance().getLeaderID()

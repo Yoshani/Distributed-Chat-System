@@ -26,7 +26,7 @@ public class LeaderState
             synchronized (LeaderState.class) {
                 if (leaderStateInstance == null) {
                     leaderStateInstance = new LeaderState(); //instance will be created at request time
-                    leaderStateInstance.addServerDefaultMainHalls(); // TODO: remove this?
+//                    leaderStateInstance.addServerDefaultMainHalls();
                 }
             }
         }
@@ -43,6 +43,11 @@ public class LeaderState
 
     public boolean isClientIDAlreadyTaken(String clientID) {
         return activeClientsList.contains(clientID);
+    }
+
+    public void resetLeader() {
+        activeClientsList.clear();
+        activeChatRooms.clear();
     }
 
     public void addClient(ClientState client) {

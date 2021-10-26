@@ -39,7 +39,7 @@ public class GossipJob implements Job{
             Integer count = serverState.getHeartbeatCountList().get(serverId);
 
             // first update heart beat count vector
-            if (!serverId.equals(myServerId)) {
+            if (serverId.equals(myServerId)) {
                 serverState.getHeartbeatCountList().put(serverId, 0); // reset my own vector always
             } else {
                 // up count all others
@@ -55,7 +55,6 @@ public class GossipJob implements Job{
 
             if (count != null) {
                 // if heart beat count is more than error factor
-                // TODO: change aliveErrorFactor
                 if (count > Integer.parseInt(aliveErrorFactor)) {
                     serverState.getSuspectList().put(serverId, "SUSPECTED");
                 } else {
@@ -67,18 +66,18 @@ public class GossipJob implements Job{
 
         // next challenge leader election if a coordinator is in suspect list
 
-        if (leaderState.getLeaderID()!= null){
-
-            Integer leaderServerId = leaderState.getLeaderID();
-            System.out.println("Current coordinator is : " + leaderState.getLeaderID().toString());
-
-            // if the leader/coordinator server is in suspect list, start the election process
-            if (serverState.getSuspectList().get(leaderServerId).equals("SUSPECTED")) {
-
-                //initiate an election
-                BullyAlgorithm.initialize();
-            }
-        }
+//        if (leaderState.isLeaderElected()){
+//
+//            Integer leaderServerId = leaderState.getLeaderID();
+//            System.out.println("Current coordinator is : " + leaderState.getLeaderID().toString());
+//
+//            // if the leader/coordinator server is in suspect list, start the election process
+//            if (serverState.getSuspectList().get(leaderServerId).equals("SUSPECTED")) {
+//
+//                //initiate an election
+//                BullyAlgorithm.initialize();
+//            }
+//        }
 
         // finally gossip about heart beat vector to a next peer
 
@@ -134,7 +133,7 @@ public class GossipJob implements Job{
 
         System.out.println(("Current cluster heart beat state is: " + serverState.getHeartbeatCountList()));
 
-        if (null != LeaderState.getInstance() && LeaderState.getInstance().getLeaderID().equals(serverState.getSelfID())) {
+        if (LeaderState.getInstance().isLeaderElected() && LeaderState.getInstance().getLeaderID().equals(serverState.getSelfID())) {
             if (serverState.getHeartbeatCountList().size() < gossipFromOthers.size()) {
                 for (String serverId : gossipFromOthers.keySet()) {
                     if (!serverState.getHeartbeatCountList().containsKey(serverId)) {

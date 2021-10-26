@@ -21,7 +21,7 @@ public class ConsensusJob implements Job {
         if (!serverState.onGoingConsensus().get()) {
             // This is a leader based Consensus.
             // If no leader elected at the moment then no consensus task to perform.
-            if (leaderState.getLeaderID() != null) {
+            if (leaderState.isLeaderElected()) {
                 serverState.onGoingConsensus().set(true);
                 performConsensus(context); // critical region
                 serverState.onGoingConsensus().set(false);
@@ -72,7 +72,7 @@ public class ConsensusJob implements Job {
                     MessageTransfer.sendServerBroadcast(startVoteMessage, serverList);
                     System.out.println("INFO : Leader calling for vote to kick suspect-server: " + startVoteMessage);
                 } catch (Exception e) {
-                    System.out.println("ERROR : Leader calling for vote to kick suspect-server is failed");
+                    System.out.println("WARN : Leader calling for vote to kick suspect-server is failed");
                 }
 
                 //wait for consensus vote duration period
@@ -82,7 +82,7 @@ public class ConsensusJob implements Job {
                     e.printStackTrace();
                 }
 
-                System.out.println((String.format("Consensus votes to kick server [%s]: %s", suspectServerId, serverState.getVoteSet())));
+                System.out.println((String.format("INFO : Consensus votes to kick server [%s]: %s", suspectServerId, serverState.getVoteSet())));
 
                 if (serverState.getVoteSet().get("YES") > serverState.getVoteSet().get("NO")) {
 
@@ -117,12 +117,12 @@ public class ConsensusJob implements Job {
         Integer mySeverId = serverState.getSelfID();
 
         if (serverState.getSuspectList().containsKey(suspectServerId)) {
-            if (serverState.getSuspectList().get(suspectServerId) == "SUSPECTED") {
+            if (serverState.getSuspectList().get(suspectServerId).equals("SUSPECTED")) {
 
                 JSONObject answerVoteMessage = new JSONObject();
                 answerVoteMessage = serverMessage.answerVoteMessage(suspectServerId, "YES", mySeverId);
                 try {
-                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(serverId));
+                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(LeaderState.getInstance().getLeaderID()));
                     System.out.println(String.format("INFO : Voting on suspected server: [%s] vote: YES", suspectServerId));
                 } catch (Exception e) {
                     System.out.println("ERROR : Voting on suspected server is failed");
@@ -133,7 +133,7 @@ public class ConsensusJob implements Job {
                 JSONObject answerVoteMessage = new JSONObject();
                 answerVoteMessage = serverMessage.answerVoteMessage(suspectServerId, "NO", mySeverId);
                 try {
-                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(serverId));
+                    MessageTransfer.sendServer(answerVoteMessage, serverState.getServers().get(LeaderState.getInstance().getLeaderID()));
                     System.out.println(String.format("INFO : Voting on suspected server: [%s] vote: NO", suspectServerId));
                 } catch (Exception e) {
                     System.out.println("ERROR : Voting on suspected server is failed");

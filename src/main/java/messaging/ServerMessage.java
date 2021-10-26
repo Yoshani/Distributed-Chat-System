@@ -81,6 +81,15 @@ public class ServerMessage
     }
 
     @SuppressWarnings("unchecked")
+    public static JSONObject getLeaderStateUpdateComplete(String serverID) {
+        // {"type" : "leaderstateupdatecomplete", "serverid" : "s3"}
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("type", "leaderstateupdatecomplete");
+        jsonObject.put("serverid", serverID);
+        return jsonObject;
+    }
+
+    @SuppressWarnings("unchecked")
     public static JSONObject getClientIdApprovalRequest(String clientID, String sender, String threadID) {
         // {"type" : "clientidapprovalrequest", "clientid" : "Adel", "sender" : "s2", "threadid" : "10"}
         JSONObject jsonObject = new JSONObject();

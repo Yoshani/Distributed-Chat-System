@@ -1,8 +1,13 @@
 package consensus;
 
+import messaging.MessageTransfer;
+import messaging.ServerMessage;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import server.Server;
 import server.ServerState;
+
+import java.util.List;
 
 public class LeaderStateUpdate extends Thread {
     int numberOfServersWithLowerIds = ServerState.getInstance().getSelfID() - 1;
@@ -19,8 +24,42 @@ public class LeaderStateUpdate extends Thread {
                 if( System.currentTimeMillis() > end || numberOfUpdatesReceived == numberOfServersWithLowerIds ) {
                     leaderUpdateInProgress = false;
                     System.out.println("INFO : Leader update completed");
-                    System.out.println(LeaderState.getInstance().getRoomIDList());
+
                     BullyAlgorithm.leaderUpdateComplete = true;
+
+                    // add self clients and chat rooms to leader state
+                    List<String> selfClients = ServerState.getInstance().getClientIdList();
+                    List<List<String>> selfRooms = ServerState.getInstance().getChatRoomList();
+
+                    for( String clientID : selfClients ) {
+                        LeaderState.getInstance().addClientLeaderUpdate( clientID );
+                    }
+
+                    for( List<String> chatRoom : selfRooms ) {
+                        LeaderState.getInstance().addApprovedRoom( chatRoom.get( 0 ),
+                                chatRoom.get( 1 ), Integer.parseInt(chatRoom.get( 2 )) );
+                    }
+                    System.out.println("INFO : Finalized clients: " + LeaderState.getInstance().getClientIDList() +
+                                               ", rooms: " + LeaderState.getInstance().getRoomIDList());
+
+                    // send update complete message to other servers
+                    for ( int key : ServerState.getInstance().getServers().keySet() ) {
+                        if ( key != ServerState.getInstance().getSelfID() ){
+                            Server destServer = ServerState.getInstance().getServers().get(key);
+
+                            try {
+                                MessageTransfer.sendServer(
+                                        ServerMessage.getLeaderStateUpdateComplete( String.valueOf(ServerState.getInstance().getSelfID()) ),
+                                        destServer
+                                );
+                                System.out.println("INFO : Sent leader update complete message to s"+destServer.getServerID());
+                            }
+                            catch(Exception e) {
+                                System.out.println("WARN : Server s"+destServer.getServerID()+
+                                                           " has failed, it will not receive the leader update complete message");
+                            }
+                        }
+                    }
                 }
                 Thread.sleep(10);
             }

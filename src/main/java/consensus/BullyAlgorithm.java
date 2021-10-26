@@ -16,7 +16,7 @@ public class BullyAlgorithm implements Runnable{
     static volatile boolean leaderFlag = false;
     static volatile boolean electionInProgress = false;
 
-    static volatile boolean leaderUpdateComplete = false;
+    public static volatile boolean leaderUpdateComplete = false;
 
     public BullyAlgorithm( String operation) {
         this.operation = operation;

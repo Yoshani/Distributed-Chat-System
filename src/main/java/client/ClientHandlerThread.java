@@ -121,7 +121,7 @@ public class ClientHandlerThread extends Thread {
     {
         if (checkID(clientID)) {
             // busy wait until leader is elected
-            while(!LeaderState.getInstance().isLeaderElected()) { // TODO: any better way to do this?
+            while(!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
             synchronized( lock ) {

@@ -38,7 +38,15 @@ public class LeaderState
     }
 
     public boolean isLeaderElected() {
-        return BullyAlgorithm.leaderUpdateComplete;
+        return (BullyAlgorithm.leaderFlag && BullyAlgorithm.leaderUpdateComplete);
+    }
+
+    public boolean isLeaderElectedAndIamLeader() {
+        return (BullyAlgorithm.leaderFlag && ServerState.getInstance().getSelfID() == LeaderState.getInstance().getLeaderID());
+    }
+
+    public boolean isLeaderElectedAndMessageFromLeader(int serverID) {
+        return (BullyAlgorithm.leaderFlag && serverID == LeaderState.getInstance().getLeaderID());
     }
 
     public boolean isClientIDAlreadyTaken(String clientID) {
@@ -133,6 +141,10 @@ public class LeaderState
 
     public ArrayList<String> getRoomIDList() {
         return new ArrayList<>(this.activeChatRooms.keySet());
+    }
+
+    public List<String> getClientIDList() {
+        return this.activeClientsList;
     }
 
     //remove all rooms and clients by server ID

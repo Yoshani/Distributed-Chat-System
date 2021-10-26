@@ -18,8 +18,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class ServerHandlerThread extends Thread {
 
@@ -258,13 +256,23 @@ public class ServerHandlerThread extends Thread {
                         System.out.println("INFO : Client '" + clientID + "' deleted by leader");
 
                     } else if (j_object.get("type").equals("leaderstateupdate")) {
-                        System.out.println(j_object);
-
-                        if( !leaderStateUpdate.isAlive() ) {
-                            leaderStateUpdate = new LeaderStateUpdate();
-                            leaderStateUpdate.start();
+                        if( LeaderState.getInstance().isLeaderElectedAndIamLeader() )
+                        {
+                            if( !leaderStateUpdate.isAlive() )
+                            {
+                                leaderStateUpdate = new LeaderStateUpdate();
+                                leaderStateUpdate.start();
+                            }
+                            leaderStateUpdate.receiveUpdate( j_object );
                         }
-                        leaderStateUpdate.receiveUpdate( j_object );
+
+                    } else if (j_object.get("type").equals("leaderstateupdatecomplete")) {
+                        int serverID = Integer.parseInt(j_object.get("serverid").toString());
+                        if( LeaderState.getInstance().isLeaderElectedAndMessageFromLeader( serverID ) )
+                        {
+                            System.out.println("INFO : Received leader update complete message from s"+serverID);
+                            BullyAlgorithm.leaderUpdateComplete = true;
+                        }
 
                     } else if (j_object.get("type").equals("gossip")) {
                         GossipJob.receiveMessages(j_object);

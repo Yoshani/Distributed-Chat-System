@@ -6,6 +6,7 @@ import client.ClientHandlerThread;
 import client.ClientState;
 import consensus.BullyAlgorithm;
 import consensus.LeaderState;
+import consensus.LeaderStateUpdate;
 import messaging.MessageTransfer;
 import messaging.ServerMessage;
 import org.json.simple.JSONArray;
@@ -23,6 +24,7 @@ import java.util.List;
 public class ServerHandlerThread extends Thread {
 
     private final ServerSocket serverCoordinationSocket;
+    private LeaderStateUpdate leaderStateUpdate;
 
     public ServerHandlerThread(ServerSocket serverCoordinationSocket) {
         this.serverCoordinationSocket = serverCoordinationSocket;
@@ -255,20 +257,13 @@ public class ServerHandlerThread extends Thread {
                         LeaderState.getInstance().removeClient(clientID, formerRoomID);
                         System.out.println("INFO : Client '" + clientID + "' deleted by leader");
 
-                    } else if (j_object.get("type").equals("leaderstateupdate")) { // TODO: all waiting processes must wait until leader updation
-                        JSONArray clientIdList = ( JSONArray ) j_object.get( "clients" );
-                        JSONArray chatRoomsList = ( JSONArray ) j_object.get( "chatrooms" );
-                        System.out.println(chatRoomsList);
+                    } else if (j_object.get("type").equals("leaderstateupdate")) {
 
-                        for( Object clientID : clientIdList ) {
-                            LeaderState.getInstance().addClientLeaderUpdate( clientID.toString() );
+                        if( !leaderStateUpdate.isAlive() ) {
+                            leaderStateUpdate = new LeaderStateUpdate( );
+                            leaderStateUpdate.start();
                         }
-
-                        for( Object chatRoom : chatRoomsList ) {
-                            JSONObject j_room = (JSONObject)chatRoom;
-                            LeaderState.getInstance().addApprovedRoom( j_room.get("clientid").toString(),
-                                    j_room.get("roomid").toString(), Integer.parseInt(j_room.get("serverid").toString()) );
-                        }
+                        leaderStateUpdate.receiveUpdate( j_object );
 
                     } else if (j_object.get("type").equals("gossip")) {
                         GossipJob.receiveMessages(j_object);

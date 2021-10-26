@@ -38,7 +38,7 @@ public class LeaderState
     }
 
     public boolean isLeaderElected() {
-        return BullyAlgorithm.leaderFlag;
+        return BullyAlgorithm.leaderUpdateComplete;
     }
 
     public boolean isClientIDAlreadyTaken(String clientID) {

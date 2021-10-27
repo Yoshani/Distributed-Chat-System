@@ -16,7 +16,6 @@ import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.Scanner;
 
-
 public class Main {
 
     private static Integer alive_interval = 3;

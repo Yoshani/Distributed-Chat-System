@@ -92,7 +92,7 @@ public class ConsensusJob implements Job {
 
                         MessageTransfer.sendServerBroadcast(notifyServerDownMessage, serverList);
                         System.out.println("INFO : Notify server " + suspectServerId + " down. Removing...");
-                        serverState.removeServer(suspectServerId);
+//                        serverState.removeServer(suspectServerId);
                         leaderState.removeRemoteChatRoomsClientsByServerId(suspectServerId);
                         serverState.removeServerInCountList(suspectServerId);
                         serverState.removeServerInSuspectList(suspectServerId);
@@ -172,7 +172,7 @@ public class ConsensusJob implements Job {
 
         System.out.println("Server down notification received. Removing server: " + serverId);
 
-        serverState.removeServer(serverId);
+//        serverState.removeServer(serverId);
         leaderState.removeRemoteChatRoomsClientsByServerId(serverId);
         serverState.removeServerInCountList(serverId);
         serverState.removeServerInSuspectList(serverId);

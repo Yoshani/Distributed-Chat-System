@@ -155,7 +155,6 @@ public class BullyAlgorithm implements Runnable{
             }
         }
         if( numberOfRequestsNotSent == ServerState.getInstance().getServers().size()-1 ) {
-            leaderUpdateComplete = true;
             // add self clients and chat rooms to leader state
             List<String> selfClients = ServerState.getInstance().getClientIdList();
             List<List<String>> selfRooms = ServerState.getInstance().getChatRoomList();
@@ -168,6 +167,8 @@ public class BullyAlgorithm implements Runnable{
                 LeaderState.getInstance().addApprovedRoom( chatRoom.get( 0 ),
                         chatRoom.get( 1 ), Integer.parseInt(chatRoom.get( 2 )) );
             }
+
+            leaderUpdateComplete = true;
         }
     }
     /**

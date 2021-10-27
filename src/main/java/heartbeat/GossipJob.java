@@ -95,7 +95,7 @@ public class GossipJob implements Job{
                     remoteServer.add(server);
                 }
             }
-            Collections.shuffle(remoteServer, new Random(System.nanoTime())); // another way of randomize the list
+//            Collections.shuffle(remoteServer, new Random(System.nanoTime())); // another way of randomize the list
 
             // change concurrent hashmap to hashmap before sending
             HashMap<Integer, Integer> heartbeatCountList = new HashMap<>(serverState.getHeartbeatCountList());
@@ -124,7 +124,7 @@ public class GossipJob implements Job{
 
         //update the heartbeatcountlist by taking minimum
         for (String serverId : gossipFromOthers.keySet()) {
-            Integer localHeartbeatCount = serverState.getHeartbeatCountList().get(serverId);
+            Integer localHeartbeatCount = serverState.getHeartbeatCountList().get(Integer.parseInt(serverId));
             Integer remoteHeartbeatCount = (int) (long)gossipFromOthers.get(serverId);
             if (localHeartbeatCount != null && remoteHeartbeatCount < localHeartbeatCount) {
                 serverState.getHeartbeatCountList().put(Integer.parseInt(serverId), remoteHeartbeatCount);
@@ -144,6 +144,4 @@ public class GossipJob implements Job{
         }
 
     }
-
-
 }

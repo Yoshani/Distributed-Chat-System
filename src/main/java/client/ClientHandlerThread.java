@@ -124,34 +124,29 @@ public class ClientHandlerThread extends Thread {
             while(!LeaderState.getInstance().isLeaderElected()) {
                 Thread.sleep(1000);
             }
-            synchronized( lock ) {
-                while( approvedClientID == -1 )
-                {
-                    // if self is leader get direct approval
-                    if( LeaderState.getInstance().isLeader() )
-                    {
-                        boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken( clientID );
-                        approvedClientID = approved ? 1 : 0;
-                        System.out.println("INFO : Client ID '"+ clientID + " is" + (approved ? " ":" not ") + "approved");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // send client id approval request to leader
-                            MessageTransfer.sendToLeader(
-                                    ServerMessage.getClientIdApprovalRequest( clientID,
-                                            String.valueOf( ServerState.getInstance().getSelfID() ),
-                                            String.valueOf( this.getId() )
-                                    )
-                            );
 
-                            System.out.println( "INFO : Client ID '" + clientID + "' sent to leader for approval" );
-                        }
-                        catch( IOException e )
-                        {
-                            e.printStackTrace();
-                        }
+            // if self is leader get direct approval
+            if (LeaderState.getInstance().isLeader()) {
+                boolean approved = !LeaderState.getInstance().isClientIDAlreadyTaken(clientID);
+                approvedClientID = approved ? 1 : 0;
+                System.out.println("INFO : Client ID '" + clientID + " is" + (approved ? " " : " not ") + "approved");
+            } else {
+                try {
+                    // send client id approval request to leader
+                    MessageTransfer.sendToLeader(
+                            ServerMessage.getClientIdApprovalRequest(clientID,
+                                    String.valueOf(ServerState.getInstance().getSelfID()),
+                                    String.valueOf(this.getId())
+                            )
+                    );
+
+                    System.out.println("INFO : Client ID '" + clientID + "' sent to leader for approval");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                synchronized (lock) {
+                    while (approvedClientID == -1) {
                         lock.wait(7000);
                     }
                 }

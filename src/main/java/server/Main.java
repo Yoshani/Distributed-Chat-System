@@ -26,11 +26,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-        System.out.println("INFO : Enter server ID (s1)[default]:  ");
-        Scanner scanner = new Scanner(System.in);
-        String serverID = scanner.nextLine();  // Read user input
-
-        ServerState.getInstance().initializeWithConfigs(serverID, args[1]);
+        //System.out.println("INFO : Enter server ID (ex- s1):  ");
+        //Scanner scanner = new Scanner(System.in);
+        //String serverID = scanner.nextLine();  // Read user input
+        System.out.println("LOG  : ARG[0] = " + args[0] + " ARG[1] = '" + args[1] + "'");
+        ServerState.getInstance().initializeWithConfigs(args[0], args[1]);
 
         System.out.println("LOG  : ------server started------");
 

@@ -24,14 +24,14 @@ public class ServerState {
     private final ConcurrentHashMap<Integer, Integer> heartbeatCountList = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Integer> voteSet = new ConcurrentHashMap<>();
 
-    private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
+    private final ConcurrentHashMap<Integer, Server> servers = new ConcurrentHashMap<>(); // list of other servers
 
     private Room mainHall;
 
     // maintain client handler thread map <threadID, thread>
-    private final HashMap<Long, ClientHandlerThread> clientHandlerThreadMap = new HashMap<>();
+    private final ConcurrentHashMap<Long, ClientHandlerThread> clientHandlerThreadMap = new ConcurrentHashMap<>();
 
-    private final HashMap<String, Room> roomMap = new HashMap<>();  // maintain local room object list <roomID,roomObject>
+    private final ConcurrentHashMap<String, Room> roomMap = new ConcurrentHashMap<>();  // maintain local room object list <roomID,roomObject>
 
     //singleton
     private static ServerState serverStateInstance;
@@ -154,7 +154,7 @@ public class ServerState {
         return numberOfServersWithHigherIds;
     }
 
-    public HashMap<Integer, Server> getServers() {
+    public ConcurrentHashMap<Integer, Server> getServers() {
         return servers;
     }
 
@@ -166,7 +166,7 @@ public class ServerState {
         return mainHall;
     }
 
-    public HashMap<String, Room> getRoomMap() {
+    public ConcurrentHashMap<String, Room> getRoomMap() {
         return roomMap;
     }
 

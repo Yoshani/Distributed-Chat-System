@@ -48,7 +48,7 @@ public class Main {
 
             // bind SocketAddress with inetAddress and port
             SocketAddress endPointCoordination = new InetSocketAddress(
-                    ServerState.getInstance().getServerAddress(),
+                    "0.0.0.0",//ServerState.getInstance().getServerAddress()
                     ServerState.getInstance().getCoordinationPort()
             );
             serverCoordinationSocket.bind( endPointCoordination );
@@ -64,7 +64,7 @@ public class Main {
 
             // bind SocketAddress with inetAddress and port
             SocketAddress endPointClient = new InetSocketAddress(
-                    ServerState.getInstance().getServerAddress(),
+                    "0.0.0.0",//ServerState.getInstance().getServerAddress()
                     ServerState.getInstance().getClientsPort()
             );
             serverClientsSocket.bind(endPointClient);

@@ -17,11 +17,11 @@ public class ServerState {
     private int clientsPort;
     private int numberOfServersWithHigherIds;
 
-    private AtomicBoolean ongoingConsensus;
+    private AtomicBoolean ongoingConsensus = new AtomicBoolean(false);
 
-    private ConcurrentHashMap<Integer, String> suspectList;
-    private ConcurrentHashMap<Integer, Integer> heartbeatCountList;
-    private ConcurrentHashMap<String, Integer> voteSet;
+    private final ConcurrentHashMap<Integer, String> suspectList = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, Integer> heartbeatCountList = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Integer> voteSet = new ConcurrentHashMap<>();
 
     private final HashMap<Integer, Server> servers = new HashMap<>(); // list of other servers
 
@@ -36,10 +36,6 @@ public class ServerState {
     private static ServerState serverStateInstance;
 
     private ServerState() {
-        suspectList = new ConcurrentHashMap<>();
-        heartbeatCountList = new ConcurrentHashMap<>();
-        ongoingConsensus = new AtomicBoolean(false);
-        voteSet = new ConcurrentHashMap<>();
     }
 
     public static ServerState getInstance() {

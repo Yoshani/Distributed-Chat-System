@@ -1,6 +1,7 @@
 package server;
 
 import client.ClientHandlerThread;
+import client.ClientState;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -122,6 +123,11 @@ public class ServerState {
             chatRoomList.add( roomInfo );
         }
         return chatRoomList;
+    }
+
+    public void removeClient (String clientID, String formerRoom, Long threadID){
+        this.roomMap.get(formerRoom).removeParticipants(clientID);
+        this.clientHandlerThreadMap.remove(threadID);
     }
 
     public String getServerID() {

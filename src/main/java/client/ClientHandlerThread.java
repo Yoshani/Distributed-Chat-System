@@ -148,7 +148,7 @@ public class ClientHandlerThread extends Thread {
 
                             System.out.println( "INFO : Client ID '" + clientID + "' sent to leader for approval" );
                         }
-                        catch( Exception e )
+                        catch( IOException e )
                         {
                             e.printStackTrace();
                         }

@@ -54,7 +54,7 @@ run the following commands to install dependencies and build
  
 The output jar will be created inside the `'target'` folder named `Distributed-Chat-System-1.0-SNAPSHOT-jar-with-dependencies.jar`
 
-##Instructions to Run the Jar
+## Instructions to Run the Jar
 
 run the following command in a terminal 
 

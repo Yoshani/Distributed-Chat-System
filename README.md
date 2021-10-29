@@ -26,6 +26,17 @@ consensus where the server failure is detected and handled accordingly. With thi
 implementation, fault tolerance is ensured. The implementation also guarantees
 failure transparency to the client. <br/>
 
+## Executable Jar files
+
+The executable jar files of the client and server are provided in the folder `executables`. <br/>
+
+A chat client can be executed as: <br/>
+```java -jar client.jar -h server_address [-p server_port] -i identity [-d]``` <br/>
+eg: java -jar client.jar -h localhost -p 4444 -i Adel <br/>
+
+A chat server can be executed as: <br/>
+```java -jar server.jar [server_name] "[location of server configuration file]"``` <br/>
+eg: java -jar server.jar s1 "C:code\src\main\java\config\server_conf.txt"
 
 ## Instructions to Build the executable Jar
 

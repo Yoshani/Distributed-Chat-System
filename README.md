@@ -1,5 +1,7 @@
 # Distributed Chat System - CS4262 Distributed Systems
 
+## Introduction 
+
 This group project is about creating a distributed chat application. The system consists of two main distributed components: chat servers and chat clients, which can run on different hosts. <br/> 
 
 **This repository contains the server-side codebase** 
@@ -21,7 +23,7 @@ implementation, fault tolerance is ensured. The implementation also guarantees
 failure transparency to the client. <br/>
 
 
-##Instructions to Build the executable Jar
+## Instructions to Build the executable Jar
 
 Development Environment - `IntelliJ IDEA`
 
